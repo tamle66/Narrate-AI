@@ -35,6 +35,12 @@ export function useNativeHost() {
                     setNativeStatus('running');
                 } else if (msg.status === 'stopped') {
                     setNativeStatus('stopped');
+                    // Auto-start logic
+                    const { settings } = useStore.getState();
+                    if (settings.autoStart) {
+                        console.log("Auto-starting server...");
+                        port.postMessage({ command: 'start_server' });
+                    }
                 } else if (msg.status === 'starting' || msg.status === 'installing') {
                     setNativeStatus(msg.status);
                     if (msg.log) {
