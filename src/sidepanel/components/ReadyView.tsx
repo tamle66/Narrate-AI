@@ -1,13 +1,25 @@
-import { MousePointer2, PlayCircle, FileScan } from 'lucide-react';
+import { MousePointer2, PlayCircle, FileScan, ChevronDown, Settings2 } from 'lucide-react';
 
 interface ReadyViewProps {
     onOpenSettings?: () => void;
     onScanPage: () => void;
+    voice: string;
+    speed: number;
+    availableVoices: string[];
+    onVoiceChange?: (voice: string) => void;
+    onSpeedChange?: (speed: number) => void;
 }
 
-export function ReadyView({ onScanPage }: ReadyViewProps) {
+export function ReadyView({
+    onScanPage,
+    voice,
+    speed,
+    availableVoices,
+    onVoiceChange,
+    onSpeedChange
+}: ReadyViewProps) {
     return (
-        <div className="relative z-10 flex flex-1 flex-col overflow-y-auto p-5 scroll-smooth h-full">
+        <div className="relative z-10 flex flex-1 flex-col overflow-y-auto p-5 scroll-smooth h-full custom-scrollbar">
             {/* System Ready Badge */}
             <div className="mb-6 flex justify-center">
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary shadow-[0_0_15px_-3px_rgba(255,107,0,0.15)] uppercase tracking-wider">
@@ -52,8 +64,55 @@ export function ReadyView({ onScanPage }: ReadyViewProps) {
                 </div>
             </div>
 
+            {/* Configuration Section */}
+            <div className="mt-8 flex flex-col gap-4">
+                <div className="flex items-center gap-2 px-1">
+                    <Settings2 size={14} className="text-primary/70" />
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Configuration</span>
+                    <div className="h-px bg-white/5 flex-1 ml-2"></div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                    <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-primary/30 hover:bg-white/10 transition-all group relative">
+                        <div className="flex flex-col flex-1">
+                            <label className="text-[9px] uppercase tracking-wider text-white/40 mb-1">Voice Model</label>
+                            <div className="text-sm font-medium text-white flex items-center gap-2 relative">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_5px_rgba(251,146,60,0.5)]"></span>
+                                <span className="truncate max-w-[150px]">{voice}</span>
+                                <select
+                                    value={voice}
+                                    onChange={(e) => onVoiceChange?.(e.target.value)}
+                                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                >
+                                    {availableVoices.map(v => (
+                                        <option key={v} value={v} className="bg-background-dark text-white">{v}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <ChevronDown size={20} className="text-white/40 group-hover:text-primary transition-colors pointer-events-none" />
+                    </div>
+
+                    <div className="bg-white/5 border border-white/5 rounded-xl p-3 hover:border-primary/30 transition-colors">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[9px] uppercase tracking-wider text-white/40">Speed</label>
+                            <span className="text-[10px] font-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">{speed}x</span>
+                        </div>
+                        <input
+                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                            type="range"
+                            min="0.5"
+                            max="2.0"
+                            step="0.1"
+                            value={speed}
+                            onChange={(e) => onSpeedChange?.(Number(e.target.value))}
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Context Mode Tip */}
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-8 flex flex-col gap-3">
                 <div className="flex items-start gap-3 rounded-lg bg-[#1e2124]/40 p-3 border border-white/5 hover:border-primary/20 transition-colors">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a2e33] text-primary">
                         <MousePointer2 size={16} />
@@ -68,8 +127,8 @@ export function ReadyView({ onScanPage }: ReadyViewProps) {
             </div>
 
             {/* Bottom Graphic */}
-            <div className="mt-auto pt-6 pb-2 opacity-40 flex justify-center items-end flex-1 pointer-events-none">
-                <div className="w-full h-12 relative overflow-hidden rounded-lg">
+            <div className="mt-auto pt-6 pb-2 opacity-20 flex justify-center items-end pointer-events-none">
+                <div className="w-full h-10 relative overflow-hidden rounded-lg">
                     <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-scan opacity-30"></div>
                     <div className="flex items-end justify-center gap-[3px] h-full px-8">
                         {/* Fake Equalizer Bars */}
@@ -82,3 +141,4 @@ export function ReadyView({ onScanPage }: ReadyViewProps) {
         </div>
     );
 }
+

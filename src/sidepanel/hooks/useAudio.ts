@@ -8,50 +8,64 @@ export function useAudio() {
     const currentIndexRef = useRef<number>(0);
     const playbackIdRef = useRef<number>(0);
     const audioCacheRef = useRef<Map<number, HTMLAudioElement>>(new Map());
-    const isFetchingRef = useRef<Set<number>>(new Set());
     const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const fetchPromisesRef = useRef<Map<number, Promise<void>>>(new Map());
 
     const fetchSegment = async (index: number, currentPlaybackId: number) => {
         const { settings, addLog } = useStore.getState();
         if (currentPlaybackId !== playbackIdRef.current || index >= queueRef.current.length) return;
-        if (audioCacheRef.current.has(index) || isFetchingRef.current.has(index)) return;
+        if (audioCacheRef.current.has(index)) return;
 
-        isFetchingRef.current.add(index);
-        const text = queueRef.current[index];
-
-        try {
-            const response = await fetch('http://localhost:8880/v1/audio/speech', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    input: text,
-                    voice: settings.voice,
-                    speed: settings.speed,
-                    response_format: 'mp3'
-                })
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const blob = await response.blob();
+        // If already fetching this index, wait for THAT promise
+        if (fetchPromisesRef.current.has(index)) {
+            await fetchPromisesRef.current.get(index);
+            // After waiting, check if we are still in the same playback session
             if (currentPlaybackId !== playbackIdRef.current) return;
-
-            const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audioCacheRef.current.set(index, audio);
-
-            // If we are currently waiting for this specific segment to play
+            // If we are the current index and audio isn't playing yet, trigger it
             if (index === currentIndexRef.current && !audioRef.current) {
                 playSegment(index, currentPlaybackId);
             }
-        } catch (err: any) {
-            addLog(`Preload failed for segment ${index + 1}: ${err.message}`);
-        } finally {
-            isFetchingRef.current.delete(index);
+            return;
         }
+
+        const fetchPromise = (async () => {
+            const text = queueRef.current[index];
+            try {
+                const response = await fetch('http://localhost:8880/v1/audio/speech', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: text,
+                        voice: settings.voice,
+                        speed: settings.speed,
+                        response_format: 'mp3'
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const blob = await response.blob();
+                if (currentPlaybackId !== playbackIdRef.current) return;
+
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audioCacheRef.current.set(index, audio);
+
+                if (index === currentIndexRef.current && !audioRef.current) {
+                    playSegment(index, currentPlaybackId);
+                }
+            } catch (err: any) {
+                addLog(`Fetch failed for segment ${index + 1}: ${err.message}`);
+            } finally {
+                fetchPromisesRef.current.delete(index);
+            }
+        })();
+
+        fetchPromisesRef.current.set(index, fetchPromise);
+        await fetchPromise;
     };
 
     const preloadNext = useCallback((currentPlaybackId: number) => {
-        // ALWAYS only 1 segment ahead
         const targetFetch = Math.min(currentIndexRef.current + 1, queueRef.current.length - 1);
         if (targetFetch > currentIndexRef.current) {
             fetchSegment(targetFetch, currentPlaybackId);
@@ -64,40 +78,67 @@ export function useAudio() {
 
         if (index >= queueRef.current.length) {
             addLog("Finished reading all segments");
-            setPlayback({ isPlaying: false });
+            setPlayback({ isPlaying: false, currentText: '', currentTime: 0, duration: 0 });
             return;
         }
 
         const audio = audioCacheRef.current.get(index);
         if (!audio) {
-            setPlayback({ isLoading: true });
+            setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
             fetchSegment(index, currentPlaybackId);
             return;
         }
 
         addLog(`Playing segment ${index + 1}/${queueRef.current.length}`);
-        audioRef.current = audio;
 
-        audio.oncanplaythrough = () => {
+        // Cleanup current playing audio listeners before switching
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.onended = null;
+            audioRef.current.oncanplaythrough = null;
+            audioRef.current.onloadedmetadata = null;
+            audioRef.current.ontimeupdate = null;
+            audioRef.current.onerror = null;
+            // DO NOT set src = '' here because it might be in our cache!
+        }
+
+        audioRef.current = audio;
+        audio.currentTime = 0; // Ensure it starts from beginning
+
+        const handleReady = () => {
             if (currentPlaybackId !== playbackIdRef.current) return;
-            setPlayback({ isLoading: false, isPlaying: true });
+            const duration = isFinite(audio.duration) ? audio.duration : 0;
+            setPlayback({ isLoading: false, isPlaying: true, currentTime: audio.currentTime, duration });
+
             audio.play().catch(err => {
                 if (err.name === 'NotAllowedError') setPlayback({ isAudioBlocked: true });
             });
         };
 
+        audio.oncanplaythrough = handleReady;
+        audio.onloadedmetadata = handleReady;
+
         audio.onended = () => {
-            audioCacheRef.current.delete(index);
+            if (audioCacheRef.current.size > 50) { // Keep up to 50 segments
+                const firstKey = audioCacheRef.current.keys().next().value;
+                if (firstKey !== undefined) {
+                    const oldAudio = audioCacheRef.current.get(firstKey);
+                    if (oldAudio) { oldAudio.src = ''; oldAudio.load(); }
+                    audioCacheRef.current.delete(firstKey);
+                }
+            }
+
             if (currentPlaybackId === playbackIdRef.current) {
                 currentIndexRef.current++;
                 playSegment(currentIndexRef.current, currentPlaybackId);
-                preloadNext(currentPlaybackId); // Look 1 ahead
+                preloadNext(currentPlaybackId);
             }
         };
 
         audio.ontimeupdate = () => {
             if (currentPlaybackId === playbackIdRef.current) {
-                setPlayback({ currentTime: audio.currentTime, duration: audio.duration });
+                const duration = isFinite(audio.duration) ? audio.duration : 0;
+                setPlayback({ currentTime: audio.currentTime, duration });
             }
         };
 
@@ -110,16 +151,17 @@ export function useAudio() {
             }
         };
 
-        if (audio.readyState >= 3) {
-            setPlayback({ isLoading: false, isPlaying: true });
-            audio.play().catch(() => { });
+        // If audio is already loaded/ready from cache, play immediately
+        if (audio.readyState >= 2) {
+            handleReady();
+        } else {
+            setPlayback({ isLoading: true });
         }
     }, [preloadNext]);
 
-    // Apply settings with DEBOUNCE to prevent backend hammer during slider drags
+    // Apply settings with DEBOUNCE
     useEffect(() => {
         if (!playback.currentText) return;
-
         if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
 
         restartTimerRef.current = setTimeout(() => {
@@ -127,25 +169,25 @@ export function useAudio() {
             addLog(`Applying settings: ${settings.voice} @ ${settings.speed}x`);
 
             const savedIndex = currentIndexRef.current;
+            playbackIdRef.current++;
+            const newId = playbackIdRef.current;
+
+            // When settings change, we MUST purge cache as audio needs regeneration
             if (audioRef.current) {
                 audioRef.current.pause();
+                audioRef.current.onended = null;
                 audioRef.current.src = '';
                 audioRef.current = null;
             }
 
-            playbackIdRef.current++;
-            const newId = playbackIdRef.current;
-
-            audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; });
+            audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; audio.load(); });
             audioCacheRef.current.clear();
-            isFetchingRef.current.clear();
+            fetchPromisesRef.current.clear();
 
             currentIndexRef.current = savedIndex;
-            // Immediate fetch current
             fetchSegment(savedIndex, newId);
-            // Preload 1 (the rule)
             preloadNext(newId);
-        }, 500); // Increased to 500ms for better slider handling
+        }, 500);
 
         return () => {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
@@ -158,12 +200,13 @@ export function useAudio() {
         playbackIdRef.current++;
         if (audioRef.current) {
             audioRef.current.pause();
+            audioRef.current.onended = null;
             audioRef.current.src = '';
             audioRef.current = null;
         }
-        audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; });
+        audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; audio.load(); });
         audioCacheRef.current.clear();
-        isFetchingRef.current.clear();
+        fetchPromisesRef.current.clear();
         queueRef.current = [];
         currentIndexRef.current = 0;
         setPlayback({ isPlaying: false, currentTime: 0, duration: 0, isAudioBlocked: false, isLoading: false, currentText: '' });
@@ -192,7 +235,6 @@ export function useAudio() {
         setPlayback({ currentText: displayTitle, currentTime: 0, duration: 0, isPlaying: true, isLoading: true });
 
         addLog(`Starting playback: ${segments.length} segments`);
-        // Rule: Start 0, preload 1
         fetchSegment(0, myPlaybackId);
         preloadNext(myPlaybackId);
     }, [stop, preloadNext]);
@@ -214,9 +256,64 @@ export function useAudio() {
         }
     }, []);
 
+    const nextSegment = useCallback(() => {
+        if (currentIndexRef.current < queueRef.current.length - 1) {
+            const { addLog, setPlayback } = useStore.getState();
+            addLog("Skipping to next sentence...");
+
+            playbackIdRef.current++;
+            const newId = playbackIdRef.current;
+
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.onended = null;
+                audioRef.current.oncanplaythrough = null;
+                audioRef.current = null; // CRITICAL: Clear ref so fetchSegment can trigger playSegment
+            }
+
+            currentIndexRef.current++;
+            const nextAudio = audioCacheRef.current.get(currentIndexRef.current);
+            if (!nextAudio) {
+                setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
+            }
+
+            playSegment(currentIndexRef.current, newId);
+            preloadNext(newId);
+        }
+    }, [playSegment, preloadNext]);
+
+    const prevSegment = useCallback(() => {
+        if (currentIndexRef.current > 0) {
+            const { addLog, setPlayback } = useStore.getState();
+            addLog("Going back to previous sentence...");
+
+            playbackIdRef.current++;
+            const newId = playbackIdRef.current;
+
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.onended = null;
+                audioRef.current.oncanplaythrough = null;
+                audioRef.current = null; // CRITICAL: Clear ref
+            }
+
+            currentIndexRef.current--;
+            const prevAudio = audioCacheRef.current.get(currentIndexRef.current);
+            if (!prevAudio) {
+                setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
+            }
+
+            playSegment(currentIndexRef.current, newId);
+            preloadNext(newId);
+        } else if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => { });
+        }
+    }, [playSegment, preloadNext]);
+
     const seek = useCallback((time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;
     }, []);
 
-    return { playText, togglePlay, stop, seek };
+    return { playText, togglePlay, stop, seek, nextSegment, prevSegment };
 }

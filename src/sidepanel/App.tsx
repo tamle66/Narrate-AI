@@ -9,7 +9,7 @@ import { PlayerView } from './components/PlayerView';
 export default function App() {
     const { status, sendCommand, connect } = useNativeHost();
     const { playback, logs, settings, availableVoices, setPlayback, updateSettings, setAvailableVoices } = useStore();
-    const { playText, togglePlay, seek, stop } = useAudio();
+    const { playText, togglePlay, seek, stop, nextSegment, prevSegment } = useAudio();
 
     // Fetch voices on startup
     useEffect(() => {
@@ -164,6 +164,8 @@ export default function App() {
                             speed={settings.speed}
                             availableVoices={availableVoices}
                             onSeek={seek}
+                            onNext={nextSegment}
+                            onPrev={prevSegment}
                             onVoiceChange={(v) => updateSettings({ voice: v })}
                             onSpeedChange={(s) => updateSettings({ speed: s })}
                             onBack={() => {
@@ -192,6 +194,11 @@ export default function App() {
                         <ReadyView
                             onScanPage={handleScanPage}
                             onOpenSettings={() => { }}
+                            voice={settings.voice}
+                            speed={settings.speed}
+                            availableVoices={availableVoices}
+                            onVoiceChange={(v) => updateSettings({ voice: v })}
+                            onSpeedChange={(s) => updateSettings({ speed: s })}
                         />
                     </div>
                 )}

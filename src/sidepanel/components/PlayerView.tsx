@@ -1,4 +1,4 @@
-import { Play, Pause, RotateCcw, RotateCw, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, ChevronDown, ArrowLeft } from 'lucide-react';
 import { cn } from '../../shared/utils';
 
 interface PlayerViewProps {
@@ -12,6 +12,8 @@ interface PlayerViewProps {
     speed: number;
     availableVoices: string[];
     onSeek?: (value: number) => void;
+    onNext?: () => void;
+    onPrev?: () => void;
     onVoiceChange?: (voice: string) => void;
     onSpeedChange?: (speed: number) => void;
     onBack: () => void;
@@ -20,7 +22,7 @@ interface PlayerViewProps {
 export function PlayerView({
     title, isPlaying, isLoading, togglePlay, currentTime, duration,
     voice, speed, availableVoices,
-    onSeek, onVoiceChange, onSpeedChange, onBack
+    onSeek, onNext, onPrev, onVoiceChange, onSpeedChange, onBack
 }: PlayerViewProps) {
 
     const formatTime = (time: number) => {
@@ -57,6 +59,18 @@ export function PlayerView({
             {/* Visualizer / Artwork */}
             <div className="w-full aspect-square max-h-48 mb-6 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center relative overflow-hidden group mx-auto shadow-inner">
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent"></div>
+
+                {isLoading && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="flex gap-1 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-bold animate-pulse">Generating Audio</span>
+                    </div>
+                )}
+
                 {/* Glowing Orb */}
                 <div className={cn(
                     "w-24 h-24 rounded-full bg-primary/20 blur-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
@@ -105,11 +119,11 @@ export function PlayerView({
             {/* Main Controls */}
             <div className="flex items-center justify-between px-2 gap-4 mb-8">
                 <button
-                    onClick={() => onSeek?.(Math.max(0, currentTime - 10))}
+                    onClick={onPrev}
                     className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon"
-                    title="Rewind 10s"
+                    title="Previous sentence"
                 >
-                    <RotateCcw size={24} />
+                    <SkipBack size={24} fill="currentColor" />
                 </button>
                 <button
                     onClick={togglePlay}
@@ -118,11 +132,11 @@ export function PlayerView({
                     {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
                 </button>
                 <button
-                    onClick={() => onSeek?.(Math.min(duration, currentTime + 10))}
+                    onClick={onNext}
                     className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon"
-                    title="Forward 10s"
+                    title="Next sentence"
                 >
-                    <RotateCw size={24} />
+                    <SkipForward size={24} fill="currentColor" />
                 </button>
             </div>
 

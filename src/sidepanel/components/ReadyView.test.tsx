@@ -6,7 +6,14 @@ import { ReadyView } from './ReadyView.tsx';
 describe('ReadyView', () => {
     it('should render ready state with action button', () => {
         const handleScan = vi.fn();
-        render(<ReadyView onScanPage={handleScan} />);
+        render(
+            <ReadyView
+                onScanPage={handleScan}
+                voice="af_bella"
+                speed={1.0}
+                availableVoices={['af_bella', 'af_sky']}
+            />
+        );
 
         expect(screen.getByText(/System Ready/i)).toBeInTheDocument();
         expect(screen.getByText(/Sẵn sàng phát/i)).toBeInTheDocument();
