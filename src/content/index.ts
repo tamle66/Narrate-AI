@@ -20,25 +20,38 @@ function getPageContent() {
         const reader = new Readability(documentClone);
         const article = reader.parse();
 
-        if (article && article.textContent) {
-            // Clean up text: remove double spaces/newlines
-            const cleanText = article.textContent.replace(/\s+/g, ' ').trim();
+        if (article && article.content) {
+            // Use a temporary div to get innerText, which respects block boundaries
+            // and includes list markers better than textContent.
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = article.content;
+
+            const cleanText = tempDiv.innerText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join('\n');
+
             if (cleanText.length > 50) {
                 return {
                     type: 'page',
-                    text: cleanText.substring(0, 10000), // Safety limit
+                    text: cleanText.substring(0, 15000), // Safety limit
                     title: article.title
                 };
             }
         }
     } catch (err) {
-        console.warn("Readability failed:", err);
+        log(`Readability error: ${err}`);
     }
 
     // 3. Fallback to basic extraction
     const mainContent = document.querySelector('article') || document.querySelector('main') || document.body;
     const text = mainContent.innerText || "";
-    const cleanText = text.replace(/\s+/g, ' ').trim();
+    const cleanText = text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n');
 
     return { type: 'fallback', text: cleanText.substring(0, 5000) };
 }

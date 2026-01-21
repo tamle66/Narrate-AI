@@ -22,10 +22,12 @@ graph TD
 ### Technology Stack
 - **Build Tool:** Vite + CRXJS (for HMR and streamlined manifest handling).
 - **Frontend Framework:** React + TypeScript.
-- **Styling:** TailwindCSS + Shadcn/UI (Radix Primitives).
-- **State Management:** Zustand (for global playback state and settings).
-- **Audio:** HTML5 `<audio>` element within Side Panel context.
+- **Styling:** TailwindCSS (Vanilla CSS for custom animations).
+- **Permissions:** `sidePanel`, `nativeMessaging`, `storage`, `contextMenus`, `scripting`, `<all_urls>`.
+- **State Management:** Zustand (for global playback state, logs, and settings).
+- **Audio:** HTML5 `<audio>` element with segmented streaming and 1-segment pre-fetching.
 - **Middleware:** Python `native_host.py` script.
+- **Backend:** Kokoro-FastAPI (local inference).
 
 ## 2. File Structure
 
@@ -133,10 +135,10 @@ export type ExtensionMessage =
 ## 5. Implementation Checklist
 
 ### Phase 1: Foundation & Build Setup
-- [ ] Initialize Vite project with React + TypeScript.
-- [ ] Install `crxjs` and configure `vite.config.ts` for Extension build.
-- [ ] Setup TailwindCSS.
-- [ ] Create basic `manifest.json`.
+- [x] Initialize Vite project with React + TypeScript.
+- [x] Install `crxjs` and configure `vite.config.ts` for Extension build.
+- [x] Setup TailwindCSS.
+- [x] Create basic `manifest.json`.
 
 ### Phase 2: Native Host & Background Services
 - [x] Write `native-host/kokoro_host.py` to handle logic (check port 8880, spawn subprocess).
@@ -147,18 +149,18 @@ export type ExtensionMessage =
 ### Phase 3: Side Panel UI & Logic
 - [x] Build UI Layout (Header, Player, Settings) using Glassmorphism styles.
 - [x] Implement `useNativeHost` hook to sync server status.
-- [ ] Implement `useAudio` hook for HTML5 Audio control (blob handling).
-- [ ] Connect Settings to chrome.storage.local.
+- [x] Implement `useAudio` hook with Smart Pre-fetching logic.
+- [x] Connect Settings to Zustand/Storage.
 
 ### Phase 4: Content Script & Integration
-- [x] Implement `@mozilla/readability` in `content/parser.ts`.
-- [x] Wire up "Read Page" button to trigger Content Script.
+- [x] Implement `@mozilla/readability` with layout-aware extraction.
+- [x] Wire up "Read Page" button with Auto-injection fallback.
 - [x] Handle message passing: Selection -> Background -> Side Panel -> Auto Play.
 
 ### Phase 5: Testing & Polish
-- [ ] Test end-to-end flow: Select text -> Auto-open Side Panel -> Auto-start Server -> Play.
-- [ ] Handle error states (Server crash, standard timeouts).
-- [ ] Optimize startup time feedback (Loading spinners).
+- [x] Test end-to-end flow: Select text -> Auto-open Side Panel -> Auto-start Server -> Play.
+- [x] Handle error states (Content script missing, Audio blocked).
+- [x] Optimize playback seamlessness with 1-segment lookahead and settings debouncing.
 
 ## 6. Technical Notes
 

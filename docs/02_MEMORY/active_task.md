@@ -13,13 +13,20 @@
 - [x] Implement Page Scanning logic in Content Script using Readability.
 - [x] Implement Context Menu "Read with Kokoro" integration.
 - [x] Update Extension Favicon and Player UI with new Logo.
-- [x] Implement Audio Engine (useAudio hook) for fetching and playing TTS.
+- [x] Implement Audio Engine (useAudio hook) with Smart Pre-fetching (1-segment lookahead).
+- [x] Implement Auto-injection for Content Scripts (fixing "Receiving end does not exist").
+- [x] Fix Debug Log scaling/scrolling and add live playback logs.
+- [x] Add real-time Voice/Speed switching with debounced regeneration.
 
 ## Encountered Issues & Solutions
-- **Buffering Issue:** Native host logs weren't showing in UI. Fixed by setting `PYTHONUNBUFFERED=1` and using raw byte reading in Python.
-- **Build Errors:** Pyopenjtalk failed build on Windows due to lack of C++ compiler. Fixed by modifying `pyproject.toml` to exclude `ja` (Japanese) misaki dependency.
-- **Relative Portability:** Used `os.path.dirname(__file__)` to ensure setup scripts find correct paths regardless of where they are called.
+- **Buffering Issue:** Native host logs weren't showing in UI. Fixed by setting `PYTHONUNBUFFERED=1`.
+- **Content Script Isolation:** When extension reloads, tab connection is lost. Fixed by adding `scripting` permission and implementing programmatic auto-injection on demand.
+- **Autoplay Policy:** Browser blocks audio start without a click. Added a "Permission Overlay" to capture a click if blocked.
+- **Backend Hammering:** Rapid setting changes (sliders) crashed backend throughput. Fixed with 500ms debounce.
 
 ## Learnings
-- Chrome Native Messaging length header is 4 bytes Little Endian; manually typing messages in terminal fails because terminal input is interpreted as length bytes.
-- `crxjs` handles `vite.config.ts` manifest updates automatically on build.
+- **Permissions:** `scripting` and `<all_urls>` are essential for making scan buttons work across random web pages without manual refresh.
+- **Segmented Streaming:** Breaking text into sentences and pre-fetching the next one provides a "zero latency" experience for long articles.
+- **Tab Selection:** `lastFocusedWindow: true` is more reliable than `currentWindow: true` when querying tabs from a Side Panel context.
+
+✅ Done [2026-01-21]
