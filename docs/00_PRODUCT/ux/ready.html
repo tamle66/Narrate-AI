@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Kokoro TTS - Side Panel</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ff6b00", // Vibrant Orange
+                        "background-light": "#f4f5f6",
+                        "background-dark": "#101214", // Deep, darker base for orange contrast
+                        "glass-dark": "rgba(20, 20, 22, 0.85)",
+                        "surface-dark": "#1e2124",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    boxShadow: {
+                        "neon": "0 0 10px rgba(255, 107, 0, 0.3), 0 0 20px rgba(255, 107, 0, 0.1)",
+                        "inner-glow": "inset 0 0 20px rgba(255, 107, 0, 0.05)",
+                    },
+                    backgroundImage: {
+                        "grid-pattern": "linear-gradient(to right, #2a2e33 1px, transparent 1px), linear-gradient(to bottom, #2a2e33 1px, transparent 1px)",
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #101214;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a2e33;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff6b00;
+        }
+
+        .glass-panel {
+            background: rgba(30, 33, 36, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ff6b00, transparent);
+            animation: scan 4s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.5;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark font-display text-white overflow-hidden h-screen flex flex-col">
+    <div class="fixed inset-0 pointer-events-none z-0 opacity-15"
+        style="background-size: 40px 40px; background-image: linear-gradient(to right, #333 1px, transparent 1px), linear-gradient(to bottom, #333 1px, transparent 1px);">
+    </div>
+    <div class="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-transparent via-[#101214]/60 to-[#101214]">
+    </div>
+    <header
+        class="relative z-20 flex items-center justify-between border-b border-[#272a2e] bg-[#0a0c0d]/90 backdrop-blur-md px-5 py-3 shrink-0">
+        <div class="flex items-center gap-3">
+            <div
+                class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary shadow-[0_0_10px_rgba(255,107,0,0.2)]">
+                <span class="material-symbols-outlined text-xl">graphic_eq</span>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-sm font-bold tracking-wider text-white uppercase leading-none">Kokoro TTS</h1>
+                <span class="text-[10px] text-primary font-medium tracking-widest uppercase opacity-90">Local
+                    Core</span>
+            </div>
+        </div>
+        <button
+            class="group flex h-8 w-8 items-center justify-center rounded-lg bg-[#1e2124] hover:bg-primary/20 text-[#a0aab0] hover:text-primary transition-all duration-300">
+            <span
+                class="material-symbols-outlined text-lg transition-transform duration-500 group-hover:rotate-90">settings</span>
+        </button>
+    </header>
+    <main class="relative z-10 flex flex-1 flex-col overflow-y-auto p-5 scroll-smooth">
+        <div class="mb-6 flex justify-center">
+            <div
+                class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary shadow-[0_0_15px_-3px_rgba(255,107,0,0.15)] uppercase tracking-wider">
+                <span class="relative flex h-1.5 w-1.5">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                </span>
+                System Ready
+            </div>
+        </div>
+        <div
+            class="group relative flex flex-col items-center justify-center rounded-2xl border border-[#2e3238] bg-[#16181b]/70 backdrop-blur-xl p-6 shadow-2xl transition-all duration-300 hover:border-primary/40 hover:shadow-neon">
+            <div class="absolute -left-[1px] -top-[1px] h-3 w-3 rounded-tl-lg border-l-2 border-t-2 border-primary/40">
+            </div>
+            <div class="absolute -right-[1px] -top-[1px] h-3 w-3 rounded-tr-lg border-r-2 border-t-2 border-primary/40">
+            </div>
+            <div
+                class="absolute -bottom-[1px] -left-[1px] h-3 w-3 rounded-bl-lg border-l-2 border-b-2 border-primary/40">
+            </div>
+            <div
+                class="absolute -bottom-[1px] -right-[1px] h-3 w-3 rounded-br-lg border-r-2 border-b-2 border-primary/40">
+            </div>
+            <button
+                class="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary border border-primary/30 shadow-[0_0_20px_-5px_rgba(255,107,0,0.3)] transition-all duration-300 hover:scale-105 hover:bg-primary hover:text-white hover:shadow-[0_0_30px_rgba(255,107,0,0.6)] active:scale-95">
+                <span class="material-symbols-outlined text-4xl">document_scanner</span>
+            </button>
+            <h2
+                class="mt-5 text-center text-xl font-bold tracking-tight text-white group-hover:text-primary transition-colors">
+                Sẵn sàng phát</h2>
+            <p class="mt-2 text-center text-xs text-gray-400 leading-relaxed px-1">
+                Engine loaded. Click above to <span class="text-gray-200 font-medium">scan &amp; read</span> the active
+                tab.
+            </p>
+            <div class="mt-6 w-full">
+                <button
+                    class="w-full flex items-center justify-center gap-2 rounded-lg border border-[#2e3238] bg-[#1e2124] py-2.5 text-xs font-bold uppercase tracking-wide text-gray-400 transition-all hover:border-primary/50 hover:bg-[#1e2124]/80 hover:text-white group/btn">
+                    <span
+                        class="material-symbols-outlined text-[16px] group-hover/btn:text-primary transition-colors">play_circle</span>
+                    Đọc trang hiện tại
+                </button>
+            </div>
+        </div>
+        <div class="mt-6 flex flex-col gap-3">
+            <div
+                class="flex items-start gap-3 rounded-lg bg-[#1e2124]/40 p-3 border border-white/5 hover:border-primary/20 transition-colors">
+                <div
+                    class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a2e33] text-primary">
+                    <span class="material-symbols-outlined text-base">mouse</span>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wide">Context Mode</h3>
+                    <p class="mt-1 text-[11px] text-gray-500 leading-relaxed font-body">
+                        Bôi đen văn bản và chọn <span class="text-primary font-medium">"Read with Kokoro"</span> từ menu
+                        chuột phải để bắt đầu.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-auto pt-6 pb-2 opacity-40 flex justify-center items-end flex-1 pointer-events-none">
+            <div class="w-full h-12 relative overflow-hidden rounded-lg">
+                <div class="scan-line"></div>
+                <div class="flex items-end justify-center gap-[3px] h-full px-8">
+                    <div class="w-1 bg-primary/50 h-[30%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[50%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[80%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[40%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[60%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[30%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[70%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[45%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[20%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[50%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[80%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[40%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[60%] rounded-t-sm"></div>
+                    <div class="w-1 bg-primary/50 h-[30%] rounded-t-sm"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer
+        class="relative z-20 flex items-center justify-between bg-[#0a0c0d] px-5 py-2.5 border-t border-[#272a2e] text-[9px] text-gray-600 uppercase tracking-widest font-mono">
+        <span class="flex items-center gap-1.5 hover:text-primary transition-colors cursor-default">
+            <span class="material-symbols-outlined text-[10px] text-primary">wifi_tethering</span>
+            Online • v1.0.5
+        </span>
+        <span class="opacity-40">Kokoro-80M</span>
+    </footer>
+
+</body>
+
+</html>

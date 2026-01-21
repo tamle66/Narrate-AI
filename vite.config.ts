@@ -1,0 +1,66 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { crx, defineManifest } from '@crxjs/vite-plugin'
+import path from 'path'
+
+const manifest = defineManifest({
+  manifest_version: 3,
+  name: "Kokoro TTS Local",
+  version: "1.0.0",
+  description: "High-quality local TTS using Kokoro-FastAPI",
+  permissions: [
+    "activeTab",
+    "contextMenus",
+    "storage",
+    "sidePanel",
+    "nativeMessaging"
+  ],
+  host_permissions: [
+    "http://localhost:8880/*"
+  ],
+  side_panel: {
+    "default_path": "src/sidepanel/index.html"
+  },
+  background: {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  content_scripts: [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.ts"]
+    }
+  ],
+  icons: {
+    "16": "src/sidepanel/store/logo.png",
+    "48": "src/sidepanel/store/logo.png",
+    "128": "src/sidepanel/store/logo.png"
+  },
+  action: {
+    "default_title": "Open Kokoro TTS",
+    "default_icon": {
+      "16": "src/sidepanel/store/logo.png",
+      "48": "src/sidepanel/store/logo.png",
+      "128": "src/sidepanel/store/logo.png"
+    }
+  }
+})
+
+export default defineConfig({
+  plugins: [
+    react(),
+    crx({ manifest }),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      port: 5173,
+    },
+  },
+})
