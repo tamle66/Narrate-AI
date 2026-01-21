@@ -1,6 +1,7 @@
 import { RefreshCw, Zap, WifiOff, Terminal, ChevronRight, DownloadCloud, HardDriveDownload } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useEffect, useRef } from 'react';
+import logo from '../store/logo.png';
 
 interface LoadingViewProps {
     status: 'starting' | 'error' | 'stopped' | 'backend_missing' | 'installing';
@@ -163,7 +164,7 @@ export function LoadingView({ status, onRetry, onStartServer, onInstall }: Loadi
 
                 <div className="relative mt-2">
                     <div className="w-16 h-16 rounded-full p-0.5 border-2 border-primary/20 animate-pulse">
-                        <img src="../../store/logo.png" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,149,0,0.5)]" alt="Logo" />
+                        <img src={logo} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,149,0,0.5)]" alt="Logo" />
                     </div>
                     <div className="absolute -bottom-1 -right-1">
                         <div className="w-5 h-5 bg-background-dark rounded-full flex items-center justify-center border border-primary/30">
