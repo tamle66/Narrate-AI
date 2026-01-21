@@ -1,45 +1,18 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 
 export function useAudio() {
+    const { settings, playback } = useStore();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const queueRef = useRef<string[]>([]);
     const currentIndexRef = useRef<number>(0);
-    const fetchIndexRef = useRef<number>(0);
     const playbackIdRef = useRef<number>(0);
     const audioCacheRef = useRef<Map<number, HTMLAudioElement>>(new Map());
     const isFetchingRef = useRef<Set<number>>(new Set());
-
-    const stop = useCallback(() => {
-        const { addLog, setPlayback } = useStore.getState();
-        addLog("Audio engine: Stopped");
-
-        playbackIdRef.current++;
-
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.src = '';
-            audioRef.current = null;
-        }
-
-        // Cleanup cache
-        audioCacheRef.current.forEach(audio => {
-            audio.pause();
-            audio.src = '';
-        });
-        audioCacheRef.current.clear();
-        isFetchingRef.current.clear();
-
-        queueRef.current = [];
-        currentIndexRef.current = 0;
-        fetchIndexRef.current = 0;
-
-        setPlayback({ isPlaying: false, currentTime: 0, duration: 0, isAudioBlocked: false, isLoading: false, currentText: '' });
-    }, []);
+    const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const fetchSegment = async (index: number, currentPlaybackId: number) => {
         const { settings, addLog } = useStore.getState();
-
         if (currentPlaybackId !== playbackIdRef.current || index >= queueRef.current.length) return;
         if (audioCacheRef.current.has(index) || isFetchingRef.current.has(index)) return;
 
@@ -60,14 +33,13 @@ export function useAudio() {
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const blob = await response.blob();
-
             if (currentPlaybackId !== playbackIdRef.current) return;
 
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
             audioCacheRef.current.set(index, audio);
 
-            // Trigger playback if this is the current index and we were waiting
+            // If we are currently waiting for this specific segment to play
             if (index === currentIndexRef.current && !audioRef.current) {
                 playSegment(index, currentPlaybackId);
             }
@@ -79,16 +51,15 @@ export function useAudio() {
     };
 
     const preloadNext = useCallback((currentPlaybackId: number) => {
-        // Preload up to 2 segments ahead
-        const targetFetch = Math.min(currentIndexRef.current + 2, queueRef.current.length - 1);
-        for (let i = currentIndexRef.current; i <= targetFetch; i++) {
-            fetchSegment(i, currentPlaybackId);
+        // ALWAYS only 1 segment ahead
+        const targetFetch = Math.min(currentIndexRef.current + 1, queueRef.current.length - 1);
+        if (targetFetch > currentIndexRef.current) {
+            fetchSegment(targetFetch, currentPlaybackId);
         }
     }, []);
 
     const playSegment = useCallback(async (index: number, currentPlaybackId: number) => {
         const { addLog, setPlayback } = useStore.getState();
-
         if (currentPlaybackId !== playbackIdRef.current) return;
 
         if (index >= queueRef.current.length) {
@@ -98,11 +69,9 @@ export function useAudio() {
         }
 
         const audio = audioCacheRef.current.get(index);
-
         if (!audio) {
-            addLog(`Waiting for segment ${index + 1}...`);
             setPlayback({ isLoading: true });
-            fetchSegment(index, currentPlaybackId); // Ensure it's being fetched
+            fetchSegment(index, currentPlaybackId);
             return;
         }
 
@@ -113,10 +82,7 @@ export function useAudio() {
             if (currentPlaybackId !== playbackIdRef.current) return;
             setPlayback({ isLoading: false, isPlaying: true });
             audio.play().catch(err => {
-                if (err.name === 'NotAllowedError') {
-                    addLog("Autoplay blocked - user interaction needed");
-                    setPlayback({ isAudioBlocked: true });
-                }
+                if (err.name === 'NotAllowedError') setPlayback({ isAudioBlocked: true });
             });
         };
 
@@ -125,7 +91,7 @@ export function useAudio() {
             if (currentPlaybackId === playbackIdRef.current) {
                 currentIndexRef.current++;
                 playSegment(currentIndexRef.current, currentPlaybackId);
-                preloadNext(currentPlaybackId); // Keep preloading ahead
+                preloadNext(currentPlaybackId); // Look 1 ahead
             }
         };
 
@@ -144,18 +110,68 @@ export function useAudio() {
             }
         };
 
-        // Start playback if already loaded
         if (audio.readyState >= 3) {
             setPlayback({ isLoading: false, isPlaying: true });
             audio.play().catch(() => { });
         }
-
     }, [preloadNext]);
+
+    // Apply settings with DEBOUNCE to prevent backend hammer during slider drags
+    useEffect(() => {
+        if (!playback.currentText) return;
+
+        if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+
+        restartTimerRef.current = setTimeout(() => {
+            const { addLog } = useStore.getState();
+            addLog(`Applying settings: ${settings.voice} @ ${settings.speed}x`);
+
+            const savedIndex = currentIndexRef.current;
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = '';
+                audioRef.current = null;
+            }
+
+            playbackIdRef.current++;
+            const newId = playbackIdRef.current;
+
+            audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; });
+            audioCacheRef.current.clear();
+            isFetchingRef.current.clear();
+
+            currentIndexRef.current = savedIndex;
+            // Immediate fetch current
+            fetchSegment(savedIndex, newId);
+            // Preload 1 (the rule)
+            preloadNext(newId);
+        }, 500); // Increased to 500ms for better slider handling
+
+        return () => {
+            if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+        };
+    }, [settings.voice, settings.speed, playback.currentText]);
+
+    const stop = useCallback(() => {
+        const { addLog, setPlayback } = useStore.getState();
+        addLog("Audio engine: Stopped");
+        playbackIdRef.current++;
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.src = '';
+            audioRef.current = null;
+        }
+        audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; });
+        audioCacheRef.current.clear();
+        isFetchingRef.current.clear();
+        queueRef.current = [];
+        currentIndexRef.current = 0;
+        setPlayback({ isPlaying: false, currentTime: 0, duration: 0, isAudioBlocked: false, isLoading: false, currentText: '' });
+    }, []);
 
     const playText = useCallback(async (text: string, title?: string) => {
         if (!text) return;
         const { addLog, setPlayback } = useStore.getState();
-
         stop();
         const myPlaybackId = playbackIdRef.current;
 
@@ -170,23 +186,16 @@ export function useAudio() {
             .filter(s => s.length > 0);
 
         if (segments.length === 0) return;
-
         queueRef.current = segments;
         currentIndexRef.current = 0;
         const displayTitle = title || segments[0].substring(0, 50);
+        setPlayback({ currentText: displayTitle, currentTime: 0, duration: 0, isPlaying: true, isLoading: true });
 
-        setPlayback({
-            currentText: displayTitle,
-            currentTime: 0,
-            duration: 0,
-            isPlaying: true,
-            isLoading: true
-        });
-
-        addLog(`Processing ${segments.length} segments with pre-fetching...`);
+        addLog(`Starting playback: ${segments.length} segments`);
+        // Rule: Start 0, preload 1
+        fetchSegment(0, myPlaybackId);
         preloadNext(myPlaybackId);
-        playSegment(0, myPlaybackId);
-    }, [stop, playSegment, preloadNext]);
+    }, [stop, preloadNext]);
 
     const togglePlay = useCallback(async () => {
         const { setPlayback, playback } = useStore.getState();

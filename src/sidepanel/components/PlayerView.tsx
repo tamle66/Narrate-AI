@@ -104,7 +104,11 @@ export function PlayerView({
 
             {/* Main Controls */}
             <div className="flex items-center justify-between px-2 gap-4 mb-8">
-                <button className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon">
+                <button
+                    onClick={() => onSeek?.(Math.max(0, currentTime - 10))}
+                    className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon"
+                    title="Rewind 10s"
+                >
                     <RotateCcw size={24} />
                 </button>
                 <button
@@ -113,7 +117,11 @@ export function PlayerView({
                 >
                     {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
                 </button>
-                <button className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon">
+                <button
+                    onClick={() => onSeek?.(Math.min(duration, currentTime + 10))}
+                    className="text-white/60 hover:text-white hover:bg-white/5 p-2 rounded-full transition-all active:scale-95 border border-transparent hover:shadow-neon"
+                    title="Forward 10s"
+                >
                     <RotateCw size={24} />
                 </button>
             </div>
