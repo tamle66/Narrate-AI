@@ -104,6 +104,17 @@ export function useAudio() {
 
         addLog(`Playing segment ${index + 1}/${queueRef.current.length}`);
 
+        // Trigger Highlight on page
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+            const tabId = tabs[0]?.id;
+            if (tabId) {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'HIGHLIGHT_SEGMENT',
+                    text: queueRef.current[index]
+                }).catch(() => { }); // Ignore errors if tab refreshed
+            }
+        });
+
         // Cleanup current playing audio listeners before switching
         if (audioRef.current) {
             audioRef.current.pause();
@@ -217,6 +228,15 @@ export function useAudio() {
         const { addLog, setPlayback } = useStore.getState();
         addLog("Audio engine: Stopped");
         playbackIdRef.current++;
+
+        // Clear Highlight on page
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+            const tabId = tabs[0]?.id;
+            if (tabId) {
+                chrome.tabs.sendMessage(tabId, { action: 'CLEAR_HIGHLIGHT' }).catch(() => { });
+            }
+        });
+
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.onended = null;

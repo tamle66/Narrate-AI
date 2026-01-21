@@ -21,6 +21,8 @@
 - [x] Implement "Smart Formatting" for list markers and block-level pauses (headings/paragraphs).
 - [x] Fix Race Condition and Redundant Backend Fetches using AbortController.
 - [x] Ensure Player UI persistence after playback completion.
+- [x] Implement Real-time Text Highlighting with auto-scroll logic in Content Script.
+- [x] Update ReadyView UI with detailed Context Mode instructions.
 
 ## Encountered Issues & Solutions
 - **Buffering Issue:** Native host logs weren't showing in UI. Fixed by setting `PYTHONUNBUFFERED=1`.

@@ -118,9 +118,25 @@ export function ReadyView({
                     </div>
                     <div>
                         <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wide">Chế độ Context</h3>
-                        <p className="mt-1 text-[11px] text-gray-500 leading-relaxed font-body">
-                            Bôi đen văn bản và chọn <span className="text-primary font-medium">"Đọc với Kokoro"</span> từ menu chuột phải để bắt đầu.
-                        </p>
+                        <div className="mt-1.5 space-y-2">
+                            <p className="text-[11px] text-gray-500 leading-relaxed font-body">
+                                Bôi đen văn bản và chuột phải để chọn:
+                            </p>
+                            <ul className="space-y-1.5">
+                                <li className="flex gap-2 items-start">
+                                    <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-primary/40"></div>
+                                    <span className="text-[10px] leading-tight text-gray-400">
+                                        <span className="text-primary font-medium">Đọc đoạn đã chọn</span>: Chỉ đọc phần văn bản bạn vừa bôi đen.
+                                    </span>
+                                </li>
+                                <li className="flex gap-2 items-start">
+                                    <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-primary/40"></div>
+                                    <span className="text-[10px] leading-tight text-gray-400">
+                                        <span className="text-primary font-medium">Đọc từ đây...</span>: Đọc từ vị trí chọn cho đến hết trang web.
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

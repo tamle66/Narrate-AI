@@ -40,6 +40,11 @@
     - Append periods (`.`) to block elements (`h1-h6`, `p`, `li`) if they don't end in punctuation.
 - **Learning:** Small punctuation cues significantly improve the "natural" feel of TTS by forcing the engine to pause correctly.
 
+### 8. Robust Text Highlighting with TreeWalker
+- **Problem:** Highlights often fail when text is split across multiple nested DOM nodes or when page content doesn't perfectly match the extracted text snippet.
+- **Solution:** Use **`document.createTreeWalker`** to traverse text nodes and implement a normalized text comparison (ignoring white spaces). This allows finding the segment and auto-scrolling to it even in complex article layouts.
+- **Learning:** `mark.scrollIntoView({ behavior: 'smooth', block: 'center' })` provides the best reading experience by keeping the active sentence in the middle of the screen.
+
 ## Best Practices
 - **Logging:** Maintaining a scrollable debug log in the UI is invaluable for debugging "invisible" background/native-host background processes.
 - **CORS:** Remember that Chrome Extensions have their own origin. Even for `localhost`, ensure the backend CORS policy allows the extension's `chrome-extension://<id>` origin or use `*` for local dev.

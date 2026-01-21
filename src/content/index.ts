@@ -108,6 +108,82 @@ function getContentFromSelection() {
     };
 }
 
+// Inject Highlight CSS
+const style = document.createElement('style');
+style.textContent = `
+    .kokoro-highlight {
+        background-color: rgba(255, 87, 34, 0.2); /* Cam nhạt nền */
+        border-bottom: 2.5px solid #ff5722;      /* Đường gạch chân cam đậm */
+        border-radius: 3px;
+        color: inherit;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        scroll-margin: 150px;
+        padding: 2px 0;
+        box-shadow: 0 2px 10px rgba(255, 87, 34, 0.1);
+    }
+    
+    /* Hiệu ứng khi vừa xuất hiện */
+    @keyframes kokoro-pulse {
+        0% { background-color: rgba(255, 87, 34, 0.4); }
+        100% { background-color: rgba(255, 87, 34, 0.2); }
+    }
+    .kokoro-highlight {
+        animation: kokoro-pulse 0.8s ease-out;
+    }
+`;
+document.head.appendChild(style);
+
+let currentHighlight: HTMLElement[] = [];
+
+function clearHighlight() {
+    currentHighlight.forEach(el => {
+        const parent = el.parentNode;
+        if (parent) {
+            parent.replaceChild(document.createTextNode(el.innerText), el);
+            parent.normalize(); // Merge adjacent text nodes
+        }
+    });
+    currentHighlight = [];
+}
+
+function highlightSegment(text: string) {
+    clearHighlight();
+    if (!text || text.length < 5) return;
+
+    // We use a robust way to find text across nodes
+    // For now, let's use a simpler approach: finding the text within the page
+    // Using a simple window.getSelection() + find approach or a more complex DOM walker
+
+    // Improved search: Try to find the exact text in the document body
+    // Note: This is segment-level highlighting
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    let node;
+    const cleanSearchText = text.replace(/\s+/g, ' ').trim();
+
+    while (node = walker.nextNode()) {
+        const nodeText = node.textContent || "";
+        const cleanNodeText = nodeText.replace(/\s+/g, ' ').trim();
+
+        if (cleanNodeText.includes(cleanSearchText) && cleanSearchText.length > 10) {
+            const range = document.createRange();
+            const startIdx = nodeText.indexOf(cleanSearchText);
+            if (startIdx === -1) continue;
+
+            range.setStart(node, startIdx);
+            range.setEnd(node, startIdx + cleanSearchText.length);
+
+            const mark = document.createElement('mark');
+            mark.className = 'kokoro-highlight';
+            mark.appendChild(range.extractContents());
+            range.insertNode(mark);
+
+            currentHighlight.push(mark);
+            mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            break;
+        }
+    }
+}
+
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     log(`Message received: ${request.action}`);
     if (request.action === 'GET_PAGE_CONTENT') {
@@ -119,6 +195,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         const content = getContentFromSelection();
         log(`Sending selection-onwards content back (length: ${content.text.length})`);
         sendResponse(content);
+    }
+    else if (request.action === 'HIGHLIGHT_SEGMENT') {
+        highlightSegment(request.text);
+        sendResponse({ status: 'highlighted' });
+    }
+    else if (request.action === 'CLEAR_HIGHLIGHT') {
+        clearHighlight();
+        sendResponse({ status: 'cleared' });
     }
     else if (request.action === 'PING') {
         sendResponse({ status: 'pong' });
