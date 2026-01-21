@@ -7,7 +7,14 @@ describe('useStore', () => {
         useStore.setState({
             nativeStatus: 'stopped',
             settings: { voice: 'af_bella', speed: 1.0, autoStart: true },
-            playback: { isPlaying: false, isLoading: false, currentText: '' }
+            playback: {
+                isPlaying: false,
+                isLoading: false,
+                currentText: '',
+                currentTime: 0,
+                duration: 0,
+                isAudioBlocked: false
+            }
         });
     });
 

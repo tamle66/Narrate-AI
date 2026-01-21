@@ -18,6 +18,10 @@ describe('PlayerView', () => {
                 togglePlay={handlePlayPause}
                 currentTime={10}
                 duration={100}
+                voice="af_bella"
+                speed={1.0}
+                availableVoices={['af_bella']}
+                onBack={() => { }}
             />
         );
         expect(screen.getByText(/Chapter 1: The Beginning/i)).toBeInTheDocument();

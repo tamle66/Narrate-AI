@@ -13,6 +13,7 @@
 - [x] Implement Page Scanning logic in Content Script using Readability.
 - [x] Implement Context Menu "Read with Kokoro" integration.
 - [x] Update Extension Favicon and Player UI with new Logo.
+- [x] Implement Audio Engine (useAudio hook) for fetching and playing TTS.
 
 ## Encountered Issues & Solutions
 - **Buffering Issue:** Native host logs weren't showing in UI. Fixed by setting `PYTHONUNBUFFERED=1` and using raw byte reading in Python.

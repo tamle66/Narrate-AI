@@ -1,16 +1,27 @@
-import { Play, Pause, RotateCcw, RotateCw, ChevronDown } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, ChevronDown, ArrowLeft } from 'lucide-react';
 import { cn } from '../../shared/utils';
 
 interface PlayerViewProps {
     title: string;
     isPlaying: boolean;
+    isLoading?: boolean;
     togglePlay: () => void;
     currentTime: number;
     duration: number;
+    voice: string;
+    speed: number;
+    availableVoices: string[];
     onSeek?: (value: number) => void;
+    onVoiceChange?: (voice: string) => void;
+    onSpeedChange?: (speed: number) => void;
+    onBack: () => void;
 }
 
-export function PlayerView({ title, isPlaying, togglePlay, currentTime, duration, onSeek }: PlayerViewProps) {
+export function PlayerView({
+    title, isPlaying, isLoading, togglePlay, currentTime, duration,
+    voice, speed, availableVoices,
+    onSeek, onVoiceChange, onSpeedChange, onBack
+}: PlayerViewProps) {
 
     const formatTime = (time: number) => {
         const mins = Math.floor(time / 60);
@@ -20,20 +31,28 @@ export function PlayerView({ title, isPlaying, togglePlay, currentTime, duration
 
     return (
         <div className="flex-1 flex flex-col px-5 py-6 overflow-y-auto overflow-x-hidden relative z-10 custom-scrollbar h-full">
-            {/* Now Reading Header */}
-            <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                    <span className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold">Now Reading</span>
-                </div>
-                {/* Marquee Effect container */}
-                <div className="relative overflow-hidden h-7 w-full mask-linear-fade group cursor-default">
-                    <div className="whitespace-nowrap absolute animate-marquee will-change-transform group-hover:pause">
-                        <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={onBack}
+                    className="p-2 -ml-2 rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-all active:scale-90"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        <span className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold">Now Reading</span>
                     </div>
                 </div>
-                <p className="text-[10px] text-white/40 mt-1 truncate">Source: local selection</p>
             </div>
+            {/* Marquee Effect container */}
+            <div className="relative overflow-hidden h-7 w-full mask-linear-fade group cursor-default">
+                <div className="whitespace-nowrap absolute animate-marquee will-change-transform group-hover:pause">
+                    <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
+                </div>
+            </div>
+            <p className="text-[10px] text-white/40 mt-1 truncate">Source: local selection</p>
 
             {/* Visualizer / Artwork */}
             <div className="w-full aspect-square max-h-48 mb-6 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center relative overflow-hidden group mx-auto shadow-inner">
@@ -41,7 +60,7 @@ export function PlayerView({ title, isPlaying, togglePlay, currentTime, duration
                 {/* Glowing Orb */}
                 <div className={cn(
                     "w-24 h-24 rounded-full bg-primary/20 blur-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
-                    isPlaying ? "animate-pulse-glow" : "opacity-30"
+                    isPlaying ? "animate-pulse-glow" : (isLoading ? "animate-spin-slow opacity-50" : "opacity-30")
                 )}></div>
 
                 {/* Equalizer Bars */}
@@ -101,26 +120,42 @@ export function PlayerView({ title, isPlaying, togglePlay, currentTime, duration
 
             {/* Quick Settings */}
             <div className="grid grid-cols-1 gap-3">
-                <div className="bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-between hover:border-primary/30 hover:bg-white/10 transition-all cursor-pointer group">
-                    <div className="flex flex-col">
+                <div className="bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-between hover:border-primary/30 hover:bg-white/10 transition-all group relative">
+                    <div className="flex flex-col flex-1">
                         <label className="text-[9px] uppercase tracking-wider text-white/40 mb-1">Voice Model</label>
-                        <div className="text-sm font-medium text-white flex items-center gap-2">
+                        <div className="text-sm font-medium text-white flex items-center gap-2 relative">
                             <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_5px_rgba(251,146,60,0.5)]"></span>
-                            Bella (En-US)
+                            <span className="truncate max-w-[150px]">{voice}</span>
+                            <select
+                                value={voice}
+                                onChange={(e) => onVoiceChange?.(e.target.value)}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                            >
+                                {availableVoices.map(v => (
+                                    <option key={v} value={v} className="bg-background-dark text-white">{v}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
-                    <ChevronDown size={20} className="text-white/40 group-hover:text-primary transition-colors" />
+                    <ChevronDown size={20} className="text-white/40 group-hover:text-primary transition-colors pointer-events-none" />
                 </div>
 
-                {/* Simplified Speed Control for now */}
                 <div className="bg-white/5 border border-white/5 rounded-lg p-3 hover:border-primary/30 transition-colors">
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-[9px] uppercase tracking-wider text-white/40">Speed</label>
-                        <span className="text-[10px] font-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">1.2x</span>
+                        <span className="text-[10px] font-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">{speed}x</span>
                     </div>
-                    <input className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" type="range" min="0.8" max="1.5" step="0.1" defaultValue="1.2" />
+                    <input
+                        className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                        type="range"
+                        min="0.5"
+                        max="2.0"
+                        step="0.1"
+                        value={speed}
+                        onChange={(e) => onSpeedChange?.(Number(e.target.value))}
+                    />
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

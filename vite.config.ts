@@ -13,10 +13,12 @@ const manifest = defineManifest({
     "contextMenus",
     "storage",
     "sidePanel",
-    "nativeMessaging"
+    "nativeMessaging",
+    "scripting"
   ],
   host_permissions: [
-    "http://localhost:8880/*"
+    "http://localhost:8880/*",
+    "<all_urls>"
   ],
   side_panel: {
     "default_path": "src/sidepanel/index.html"
