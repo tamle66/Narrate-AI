@@ -28,6 +28,18 @@
 - **Problem:** `article.textContent` collapses all formatting, making headers and list items run together.
 - **Solution:** Use `@mozilla/readability` to get `article.content` (HTML), then parse it back via a temporary DOM element's `innerText`. `innerText` respects CSS layout and block boundaries (adds newlines), providing a much more natural TTS experience.
 
+### 6. Backend Performance & Request Cancellation
+- **Problem:** Frequent navigation or settings changes left "zombie" fetch requests running in the background, hammering the CPU.
+- **Solution:** Use **`AbortController`**. Associate each `fetch` with a signal and trigger `.abort()` on all pending requests whenever the playback session resets (`playText`, `stop`, `jump`).
+- **Learning:** Efficient resource management on the client side is just as important as backend optimization for a smooth UX.
+
+### 7. Natural Prosody through Smart Formatting
+- **Problem:** Lists (1., 2.) often lost their numbers in `innerText`, and headings blended into the first sentence of paragraphs.
+- **Solution:** Manual DOM manipulation before extraction:
+    - Inject explicit markers (`1.`, `•`) into `<li>` elements using the `tagName` context.
+    - Append periods (`.`) to block elements (`h1-h6`, `p`, `li`) if they don't end in punctuation.
+- **Learning:** Small punctuation cues significantly improve the "natural" feel of TTS by forcing the engine to pause correctly.
+
 ## Best Practices
 - **Logging:** Maintaining a scrollable debug log in the UI is invaluable for debugging "invisible" background/native-host background processes.
 - **CORS:** Remember that Chrome Extensions have their own origin. Even for `localhost`, ensure the backend CORS policy allows the extension's `chrome-extension://<id>` origin or use `*` for local dev.

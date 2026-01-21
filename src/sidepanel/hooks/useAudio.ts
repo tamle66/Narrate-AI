@@ -9,25 +9,35 @@ export function useAudio() {
     const playbackIdRef = useRef<number>(0);
     const audioCacheRef = useRef<Map<number, HTMLAudioElement>>(new Map());
     const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
-
     const fetchPromisesRef = useRef<Map<number, Promise<void>>>(new Map());
+    const abortControllersRef = useRef<Map<number, AbortController>>(new Map());
+    const lastSettingsRef = useRef({ voice: settings.voice, speed: settings.speed });
+
+    const cancelAllFetches = useCallback(() => {
+        abortControllersRef.current.forEach(controller => controller.abort());
+        abortControllersRef.current.clear();
+        fetchPromisesRef.current.clear();
+    }, []);
 
     const fetchSegment = async (index: number, currentPlaybackId: number) => {
         const { settings, addLog } = useStore.getState();
         if (currentPlaybackId !== playbackIdRef.current || index >= queueRef.current.length) return;
         if (audioCacheRef.current.has(index)) return;
 
-        // If already fetching this index, wait for THAT promise
+        // If already fetching this index...
         if (fetchPromisesRef.current.has(index)) {
-            await fetchPromisesRef.current.get(index);
-            // After waiting, check if we are still in the same playback session
-            if (currentPlaybackId !== playbackIdRef.current) return;
-            // If we are the current index and audio isn't playing yet, trigger it
-            if (index === currentIndexRef.current && !audioRef.current) {
-                playSegment(index, currentPlaybackId);
-            }
+            try {
+                await fetchPromisesRef.current.get(index);
+                if (currentPlaybackId !== playbackIdRef.current) return;
+                if (index === currentIndexRef.current && !audioRef.current) {
+                    playSegment(index, currentPlaybackId);
+                }
+            } catch (e) { /* ignore aborted */ }
             return;
         }
+
+        const controller = new AbortController();
+        abortControllersRef.current.set(index, controller);
 
         const fetchPromise = (async () => {
             const text = queueRef.current[index];
@@ -40,7 +50,8 @@ export function useAudio() {
                         voice: settings.voice,
                         speed: settings.speed,
                         response_format: 'mp3'
-                    })
+                    }),
+                    signal: controller.signal
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -55,8 +66,10 @@ export function useAudio() {
                     playSegment(index, currentPlaybackId);
                 }
             } catch (err: any) {
+                if (err.name === 'AbortError') return;
                 addLog(`Fetch failed for segment ${index + 1}: ${err.message}`);
             } finally {
+                abortControllersRef.current.delete(index);
                 fetchPromisesRef.current.delete(index);
             }
         })();
@@ -78,7 +91,7 @@ export function useAudio() {
 
         if (index >= queueRef.current.length) {
             addLog("Finished reading all segments");
-            setPlayback({ isPlaying: false, currentText: '', currentTime: 0, duration: 0 });
+            setPlayback({ isPlaying: false, currentTime: 0 }); // Keep currentText to stay in PlayerView
             return;
         }
 
@@ -162,17 +175,23 @@ export function useAudio() {
     // Apply settings with DEBOUNCE
     useEffect(() => {
         if (!playback.currentText) return;
+
+        // ONLY trigger if voice or speed actually changed
+        if (settings.voice === lastSettingsRef.current.voice && settings.speed === lastSettingsRef.current.speed) {
+            return;
+        }
+
         if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
 
         restartTimerRef.current = setTimeout(() => {
             const { addLog } = useStore.getState();
-            addLog(`Applying settings: ${settings.voice} @ ${settings.speed}x`);
+            addLog(`Applying new settings: ${settings.voice} @ ${settings.speed}x`);
+            lastSettingsRef.current = { voice: settings.voice, speed: settings.speed };
 
             const savedIndex = currentIndexRef.current;
             playbackIdRef.current++;
             const newId = playbackIdRef.current;
 
-            // When settings change, we MUST purge cache as audio needs regeneration
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.onended = null;
@@ -182,7 +201,7 @@ export function useAudio() {
 
             audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; audio.load(); });
             audioCacheRef.current.clear();
-            fetchPromisesRef.current.clear();
+            cancelAllFetches();
 
             currentIndexRef.current = savedIndex;
             fetchSegment(savedIndex, newId);
@@ -192,7 +211,7 @@ export function useAudio() {
         return () => {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
         };
-    }, [settings.voice, settings.speed, playback.currentText]);
+    }, [settings.voice, settings.speed, playback.currentText, cancelAllFetches]);
 
     const stop = useCallback(() => {
         const { addLog, setPlayback } = useStore.getState();
@@ -206,11 +225,11 @@ export function useAudio() {
         }
         audioCacheRef.current.forEach(audio => { audio.pause(); audio.src = ''; audio.load(); });
         audioCacheRef.current.clear();
-        fetchPromisesRef.current.clear();
+        cancelAllFetches();
         queueRef.current = [];
         currentIndexRef.current = 0;
         setPlayback({ isPlaying: false, currentTime: 0, duration: 0, isAudioBlocked: false, isLoading: false, currentText: '' });
-    }, []);
+    }, [cancelAllFetches]);
 
     const playText = useCallback(async (text: string, title?: string) => {
         if (!text) return;
@@ -263,6 +282,7 @@ export function useAudio() {
 
             playbackIdRef.current++;
             const newId = playbackIdRef.current;
+            cancelAllFetches();
 
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -270,7 +290,6 @@ export function useAudio() {
                 audioRef.current.oncanplaythrough = null;
                 audioRef.current = null; // CRITICAL: Clear ref so fetchSegment can trigger playSegment
             }
-
             currentIndexRef.current++;
             const nextAudio = audioCacheRef.current.get(currentIndexRef.current);
             if (!nextAudio) {
@@ -280,7 +299,7 @@ export function useAudio() {
             playSegment(currentIndexRef.current, newId);
             preloadNext(newId);
         }
-    }, [playSegment, preloadNext]);
+    }, [playSegment, preloadNext, cancelAllFetches]);
 
     const prevSegment = useCallback(() => {
         if (currentIndexRef.current > 0) {
@@ -289,6 +308,7 @@ export function useAudio() {
 
             playbackIdRef.current++;
             const newId = playbackIdRef.current;
+            cancelAllFetches();
 
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -309,7 +329,7 @@ export function useAudio() {
             audioRef.current.currentTime = 0;
             audioRef.current.play().catch(() => { });
         }
-    }, [playSegment, preloadNext]);
+    }, [playSegment, preloadNext, cancelAllFetches]);
 
     const seek = useCallback((time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;

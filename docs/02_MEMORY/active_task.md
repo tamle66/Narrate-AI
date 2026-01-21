@@ -17,6 +17,10 @@
 - [x] Implement Auto-injection for Content Scripts (fixing "Receiving end does not exist").
 - [x] Fix Debug Log scaling/scrolling and add live playback logs.
 - [x] Add real-time Voice/Speed switching with debounced regeneration.
+- [x] Implement "Đọc từ đây..." (Read from selection until end) feature.
+- [x] Implement "Smart Formatting" for list markers and block-level pauses (headings/paragraphs).
+- [x] Fix Race Condition and Redundant Backend Fetches using AbortController.
+- [x] Ensure Player UI persistence after playback completion.
 
 ## Encountered Issues & Solutions
 - **Buffering Issue:** Native host logs weren't showing in UI. Fixed by setting `PYTHONUNBUFFERED=1`.

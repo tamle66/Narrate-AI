@@ -39,18 +39,17 @@ export function ReadyView({
                 <div className="absolute -bottom-[1px] -left-[1px] h-3 w-3 rounded-bl-lg border-l-2 border-b-2 border-primary/40"></div>
                 <div className="absolute -bottom-[1px] -right-[1px] h-3 w-3 rounded-br-lg border-r-2 border-b-2 border-primary/40"></div>
 
-                <button
-                    onClick={onScanPage}
-                    className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary border border-primary/30 shadow-[0_0_20px_-5px_rgba(255,107,0,0.3)] transition-all duration-300 hover:scale-105 hover:bg-primary hover:text-white hover:shadow-[0_0_30px_rgba(255,107,0,0.6)] active:scale-95"
+                <div
+                    className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary border border-primary/30 shadow-[0_0_20px_-5px_rgba(255,107,0,0.3)] transition-all duration-300"
                 >
                     <FileScan size={40} strokeWidth={1.5} />
-                </button>
+                </div>
 
                 <h2 className="mt-5 text-center text-xl font-bold tracking-tight text-white group-hover:text-primary transition-colors">
                     Sẵn sàng phát
                 </h2>
                 <p className="mt-2 text-center text-xs text-gray-400 leading-relaxed px-1">
-                    Engine loaded. Click above to <span className="text-gray-200 font-medium">scan & read</span> the active tab.
+                    Hệ thống đã sẵn sàng. Bấm <span className="text-gray-200 font-medium">Đọc trang hiện tại</span> để bắt đầu.
                 </p>
 
                 <div className="mt-6 w-full">
@@ -68,14 +67,14 @@ export function ReadyView({
             <div className="mt-8 flex flex-col gap-4">
                 <div className="flex items-center gap-2 px-1">
                     <Settings2 size={14} className="text-primary/70" />
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Configuration</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tùy chỉnh</span>
                     <div className="h-px bg-white/5 flex-1 ml-2"></div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
                     <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-primary/30 hover:bg-white/10 transition-all group relative">
                         <div className="flex flex-col flex-1">
-                            <label className="text-[9px] uppercase tracking-wider text-white/40 mb-1">Voice Model</label>
+                            <label className="text-[9px] uppercase tracking-wider text-white/40 mb-1">Model giọng nói</label>
                             <div className="text-sm font-medium text-white flex items-center gap-2 relative">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_5px_rgba(251,146,60,0.5)]"></span>
                                 <span className="truncate max-w-[150px]">{voice}</span>
@@ -95,7 +94,7 @@ export function ReadyView({
 
                     <div className="bg-white/5 border border-white/5 rounded-xl p-3 hover:border-primary/30 transition-colors">
                         <div className="flex justify-between items-center mb-2">
-                            <label className="text-[9px] uppercase tracking-wider text-white/40">Speed</label>
+                            <label className="text-[9px] uppercase tracking-wider text-white/40">Tốc độ</label>
                             <span className="text-[10px] font-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">{speed}x</span>
                         </div>
                         <input
@@ -118,9 +117,9 @@ export function ReadyView({
                         <MousePointer2 size={16} />
                     </div>
                     <div>
-                        <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wide">Context Mode</h3>
+                        <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wide">Chế độ Context</h3>
                         <p className="mt-1 text-[11px] text-gray-500 leading-relaxed font-body">
-                            Bôi đen văn bản và chọn <span className="text-primary font-medium">"Read with Kokoro"</span> từ menu chuột phải để bắt đầu.
+                            Bôi đen văn bản và chọn <span className="text-primary font-medium">"Đọc với Kokoro"</span> từ menu chuột phải để bắt đầu.
                         </p>
                     </div>
                 </div>

@@ -29,13 +29,19 @@ describe('Background Service', () => {
         vi.clearAllMocks();
     });
 
-    it('should register context menu on install', async () => {
-        // Dynamic import to trigger execution if side-effects
+    it('should register context menu items on install', async () => {
         const { setupContextMenu } = await import('./index');
         setupContextMenu();
+
         expect(chromeMock.contextMenus.create).toHaveBeenCalledWith({
             id: 'read_selection',
-            title: 'Read with Kokoro',
+            title: 'Đọc đoạn đã chọn',
+            contexts: ['selection']
+        });
+
+        expect(chromeMock.contextMenus.create).toHaveBeenCalledWith({
+            id: 'read_from_here',
+            title: 'Đọc từ đây',
             contexts: ['selection']
         });
     });

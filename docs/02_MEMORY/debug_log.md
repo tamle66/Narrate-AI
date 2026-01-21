@@ -30,4 +30,16 @@
 - **Action Plan:**
   1. Add file logging to `kokoro_host.py` to trace execution startup and errors.
   2. Verify no stray `print()` calls exist.
-- **Status:** In Progress
+- **Status:** Resolved (Implemented file logging, verified stdio protocol).
+
+## Issue: Redundant Backend Requests (Hammering CPU)
+- **Date:** 2026-01-21
+- **Severity:** Medium (Performance/Efficiency)
+- **Description:** Backend logs showed multiple identical `POST /v1/audio/speech` requests for the same text segments, leading to 100% CPU spikes and slow audio generation.
+- **Root Cause:** 
+  1. **Double Triggering:** `playText` initiated fetching, but the `useEffect` in `useAudio` (watching `currentText` and `settings`) also triggered 500ms later, starting a second identical session.
+  2. **No Cancellation:** When switching segments rapidly (Next/Prev) or changing settings, old pending fetch requests were never cancelled; they continued to run and hammer the backend even if their results were no longer needed.
+- **Solution:** 
+  1. **Settings Guard:** Refined `useEffect` to only trigger if `settings.voice` or `settings.speed` actually changed, ignoring the article change already handled by `playText`.
+  2. **AbortController:** Implemented `AbortController` in `fetchSegment` to cancel all pending HTTP requests immediately when a playback session resets (stop, jump, settings change).
+- **Status:** Resolved

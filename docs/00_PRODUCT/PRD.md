@@ -26,8 +26,13 @@ A Chromium-based browser extension that integrates with a locally running Kokoro
 
 ### US-02: Read Selection
 **As a** user,
-**I want** to highlight text, right-click, and select "Read with Kokoro",
-**So that** the Side Panel opens and immediately reads the selected text.
+**I want** to highlight text and select "Đọc đoạn đã chọn",
+**So that** only the highlighted text is read.
+
+### US-07: Read from Here
+**As a** user,
+**I want** to highlight a sentence and select "Đọc từ đây với Kokoro",
+**So that** the system starts reading from that point onward until the end of the article.
 
 ### US-03: Read Article (Reader Mode)
 **As a** user,
@@ -90,3 +95,9 @@ A Chromium-based browser extension that integrates with a locally running Kokoro
 - **AC 2:** Clicking "Back" during a sentence (after first 2s) restarts the current sentence.
 - **AC 3:** Clicking "Back" twice quickly (or at start of sentence) goes to the previous sentence.
 - **AC 4:** Navigation must not "hang" or stop playback if the target segment is already cached.
+
+### US-07: Content Extraction & Continuity
+- **AC 1:** Selecting "Đọc từ đây..." must extract text starting from the selection range until the end of the container (article/main/body).
+- **AC 2:** List indices and bullet points must be preserved or injected (e.g., "1.", "2.") during extraction.
+- **AC 3:** Proper punctuation (periods) must be injected between block-level elements (headings, list items) to ensure natural pauses.
+- **AC 4:** The player must not return to the Home view after playback finishes if `currentText` is present.

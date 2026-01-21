@@ -32,28 +32,45 @@ export default function App() {
 
         const handleMessage = (msg: any) => {
             if (msg.action === 'READ_SELECTION' && msg.text) {
-                playText(msg.text);
+                playText(msg.text, msg.title);
             } else if (msg.action === 'CONTENT_LOG') {
                 addLog(`[Content] ${msg.message}`);
             }
         };
 
         const checkStorage = async () => {
-            const data = await chrome.storage.local.get('lastSelection');
+            const data = await chrome.storage.local.get(['lastSelection', 'lastTitle']);
             if (data.lastSelection) {
                 const text = data.lastSelection;
-                // Clear storage immediately so it doesn't replay on manual reload
-                chrome.storage.local.remove('lastSelection');
+                const title = data.lastTitle;
+                chrome.storage.local.remove(['lastSelection', 'lastTitle']);
+                playText(text, title);
+            }
+        };
 
-                // Wait a bit for server to be up? Or playText will handle it
-                playText(text);
+        const handleStorageChange = async (changes: { [key: string]: chrome.storage.StorageChange }) => {
+            if (changes.lastSelection && changes.lastSelection.newValue) {
+                const text = changes.lastSelection.newValue;
+                // Title might not be in 'changes' if it hasn't changed, so we fetch it if missing
+                let title = changes.lastTitle?.newValue;
+                if (title === undefined) {
+                    const data = await chrome.storage.local.get('lastTitle');
+                    title = data.lastTitle;
+                }
+
+                chrome.storage.local.remove(['lastSelection', 'lastTitle']);
+                playText(text, title);
             }
         };
 
         chrome.runtime.onMessage.addListener(handleMessage);
+        chrome.storage.onChanged.addListener(handleStorageChange);
         checkStorage();
 
-        return () => chrome.runtime.onMessage.removeListener(handleMessage);
+        return () => {
+            chrome.runtime.onMessage.removeListener(handleMessage);
+            chrome.storage.onChanged.removeListener(handleStorageChange);
+        };
     }, [playText]);
 
     const handleScanPage = async () => {
