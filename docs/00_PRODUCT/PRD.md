@@ -1,7 +1,7 @@
-# Product Requirement Document (PRD): Local Kokoro TTS Extension
+# Product Requirement Document (PRD): Narrate AI
 
 ## 1. Product Overview
-A Chromium-based browser extension that integrates with a locally running Kokoro-FastAPI server (via Native Messaging) to provide high-quality Neural Text-to-Speech (TTS) capabilities. The extension uses a Side Panel interface for persistent playback and control across tabs.
+A Chromium-based browser extension that integrates with a locally running AI engine (Narrate AI Core) to provide high-quality Neural Text-to-Speech (TTS) capabilities. The extension uses a Side Panel interface for persistent playback and control across tabs.
 
 ## 2. Core Architecture
 - **Control Strategy:** Strategy 1B (Native Messaging with Auto-Start).

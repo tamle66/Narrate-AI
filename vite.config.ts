@@ -5,9 +5,9 @@ import path from 'path'
 
 const manifest = defineManifest({
   manifest_version: 3,
-  name: "Kokoro TTS Local",
+  name: "Narrate AI",
   version: "1.0.0",
-  description: "High-quality local TTS using Kokoro-FastAPI",
+  description: "High-quality Local Neural TTS for your browser",
   permissions: [
     "activeTab",
     "contextMenus",
@@ -39,7 +39,7 @@ const manifest = defineManifest({
     "128": "src/sidepanel/store/logo.png"
   },
   action: {
-    "default_title": "Open Kokoro TTS",
+    "default_title": "Open Narrate AI",
     "default_icon": {
       "16": "src/sidepanel/store/logo.png",
       "48": "src/sidepanel/store/logo.png",

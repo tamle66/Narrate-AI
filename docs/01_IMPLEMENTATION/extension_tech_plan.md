@@ -1,8 +1,8 @@
-# Technical Implementation Plan: Kokoro TTS Extension
+# Technical Implementation Plan: Narrate AI Extension
 
 ## 1. Overview & Architecture
 
-This project implements a Chrome Extension that interfaces with a local Python-based Kokoro TTS server using Native Messaging for process management and HTTP for audio inference.
+This project implements a Chrome Extension that interfaces with a local Python-based Narrate AI engine (running Kokoro-FastAPI) for high-quality audio inference.
 
 ### Core Architecture
 ```mermaid

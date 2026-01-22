@@ -73,7 +73,7 @@ export function LoadingView({ status, onRetry }: LoadingViewProps) {
                         <img src={logo} className="w-full h-full object-contain" alt="Logo" />
                     </div>
                     <div>
-                        <h1 className="text-sm font-bold text-white leading-tight uppercase tracking-tighter italic">Kokoro Engine</h1>
+                        <h1 className="text-sm font-bold text-white leading-tight uppercase tracking-tighter italic">Narrate AI</h1>
                         <p className="text-[9px] text-gray-500 font-mono tracking-widest uppercase flex items-center gap-1">
                             <Info size={10} /> Transparency Mode
                         </p>
@@ -124,7 +124,7 @@ export function LoadingView({ status, onRetry }: LoadingViewProps) {
                     <Step
                         number={1}
                         title="Tải mã nguồn (Clone)"
-                        description="Tải Kokoro Engine. Lưu ý: Xóa folder .git bên trong sau khi tải để tránh lỗi xung đột Git."
+                        description="Tải Narrate AI Core. Lưu ý: Xóa folder .git bên trong sau khi tải để tránh lỗi xung đột Git."
                         command={isMac
                             ? "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine && rm -rf external/kokoro-engine/.git"
                             : "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine; Remove-Item -Recurse -Force external/kokoro-engine/.git"}

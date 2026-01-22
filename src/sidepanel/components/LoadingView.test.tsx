@@ -6,7 +6,7 @@ import { LoadingView } from './LoadingView.tsx';
 describe('LoadingView', () => {
     it('should render connecting state', () => {
         render(<LoadingView status="starting" onRetry={() => { }} />);
-        expect(screen.getByRole('heading', { name: /Kokoro Engine/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Narrate AI/i })).toBeInTheDocument();
         expect(screen.getByText(/Connecting/i)).toBeInTheDocument();
     });
 
