@@ -26,7 +26,11 @@ BACKEND_ABS_PATH = os.path.join(BACKEND_ROOT_DIR, BACKEND_DIR_NAME)
 
 POSSIBLE_PATHS = [
     BACKEND_ABS_PATH,
-    # Fallback for old project structure if still exists
+    # Fallbacks for various common clone names
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "external", "kokoro-engine")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "external", "Kokoro-FastAPI")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "external", "kokoro-fastapi")),
+    # Fallback for old project structure
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")), 
 ]
 
@@ -291,7 +295,10 @@ def main():
             cmd = message.get("command")
             if cmd == "check_status":
                 if find_server_script() is None:
-                     send_message({"status": "backend_missing"})
+                     send_message({
+                         "status": "backend_missing", 
+                         "log": f"[HOST] Backend not found. Searched in: {', '.join([os.path.basename(p) for p in POSSIBLE_PATHS])}. Please check 'external/' folder."
+                     })
                 elif is_port_open(PORT):
                     send_message({"status": "running", "port": PORT})
                 else:

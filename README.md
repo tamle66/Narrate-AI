@@ -32,67 +32,222 @@
 
 ---
 
+## � Yêu cầu hệ thống (Prerequisites)
+
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt đầy đủ các công cụ sau:
+
+### 🔧 Bắt buộc (Required)
+1.  **Google Chrome** (hoặc Microsoft Edge)
+    *   Tải tại: [chrome.google.com](https://www.google.com/chrome/)
+
+2.  **Python 3.10+**
+    *   **Windows**: Tải tại [python.org/downloads](https://www.python.org/downloads/)
+    *   **macOS**: Đã có sẵn hoặc cài qua Homebrew: `brew install python`
+    *   **Kiểm tra**: Mở Terminal/PowerShell và gõ `python --version`
+
+3.  **Git**
+    *   **Windows**: Tải tại [git-scm.com](https://git-scm.com/download/win)
+    *   **macOS**: Cài qua Xcode Command Line Tools: `xcode-select --install`
+    *   **Kiểm tra**: Gõ `git --version` trong Terminal
+
+4.  **UV Package Manager** (Công cụ cài đặt Python siêu tốc)
+    *   **Windows (PowerShell)**:
+      ```powershell
+      powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+      ```
+    *   **macOS/Linux**:
+      ```bash
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+      ```
+    *   **Kiểm tra**: Gõ `uv --version`
+
+### 🎯 Tùy chọn (Optional - Dành cho Developer)
+*   **Node.js 18+** (Chỉ cần nếu bạn muốn build từ source code)
+    *   Tải tại: [nodejs.org](https://nodejs.org/)
+    *   Kiểm tra: `node --version` và `npm --version`
+
+---
+
 ## 🚀 Hướng dẫn cài đặt
 
-### Cách 1: Sử dụng bản Build sẵn (Dành cho người dùng)
-1.  **Tải xuống**: Click vào tab **Releases** trên GitHub và tải file `Narrate-AI-v1.0.0.zip`.
-2.  **Giải nén**: Giải nén file ZIP vào một thư mục cố định trên ổ đĩa (Ví dụ: `D:\Apps\Narrate-AI`). **Lưu ý**: Đừng để trong thư mục *Downloads* vì bạn có thể vô tình xóa nó sau này.
-3.  **Cài đặt Extension**:
-    *   Mở Chrome, truy cập `chrome://extensions/`.
-    *   Bật **Developer Mode** (Góc trên cùng bên phải).
-    *   Chọn **Load unpacked**, sau đó chọn thư mục `extension` bên trong thư mục bạn vừa giải nén.
-4.  **Kết nối Native Host**:
-    *   Vào thư mục `native-host`.
-    *   Mở Terminal/PowerShell tại đây và chạy lệnh: `python install.py`.
-    *   Copy **ID** của extension (hiển thị ở trang `chrome://extensions/`) và dán vào cửa sổ Terminal khi được hỏi.
+### 📦 Cách 1: Sử dụng bản Build sẵn (Dành cho người dùng)
+
+> **Phù hợp cho**: Người dùng muốn sử dụng ngay mà không cần biết về lập trình.
+
+#### Bước 1: Tải và giải nén Extension
+1.  Truy cập trang **[Releases](https://github.com/tamle66/Narrate-AI/releases)** trên GitHub.
+2.  Tải file `Narrate-AI-v1.0.1.zip` (hoặc phiên bản mới nhất).
+3.  **Giải nén** file ZIP vào một thư mục **cố định** trên ổ đĩa (Ví dụ: `D:\Apps\Narrate-AI`).
+    *   ⚠️ **Lưu ý**: Đừng để trong thư mục *Downloads* vì bạn có thể vô tình xóa sau này!
+
+#### Bước 2: Cài đặt Extension vào Chrome
+1.  Mở trình duyệt Chrome, gõ vào thanh địa chỉ: `chrome://extensions/`
+2.  Bật **Developer Mode** (công tắc ở góc trên cùng bên phải).
+3.  Click nút **Load unpacked** (Tải tiện ích đã giải nén).
+4.  Chọn thư mục **`extension`** bên trong thư mục bạn vừa giải nén.
+5.  Extension sẽ xuất hiện trong danh sách. **Copy Extension ID** (dãy ký tự dài bên dưới tên extension) - bạn sẽ cần nó ở bước tiếp theo.
+
+#### Bước 3: Kết nối Native Host (Cho phép Extension điều khiển máy tính)
+1.  Mở thư mục `native-host` (nằm trong thư mục bạn đã giải nén).
+2.  **Mở Terminal/PowerShell tại đây**:
+    *   **Windows**: Shift + Chuột phải vào khoảng trống → Chọn "Open PowerShell window here"
+    *   **macOS**: Chuột phải → Services → New Terminal at Folder
+3.  Chạy lệnh: `python install.py`
+4.  Khi được hỏi, **dán Extension ID** bạn đã copy ở Bước 2 và nhấn Enter.
+5.  Nếu thành công, bạn sẽ thấy thông báo: `Installation Successful!`
+
+#### Bước 4: Cài đặt AI Engine (Bộ não của Extension)
+
+> **Quan trọng**: Đây là bước tải mô hình AI về máy. Bạn cần làm theo đúng thứ tự.
+
+1.  **Mở Terminal/PowerShell tại thư mục gốc** (thư mục `Narrate-AI` bạn đã giải nén ở Bước 1).
+    
+2.  **Tải mã nguồn AI Core**:
+    ```bash
+    # Tạo thư mục chứa AI Engine
+    mkdir external
+    
+    # Tải AI Core từ GitHub
+    git clone https://github.com/remsky/Kokoro-FastAPI.git external/narrate-ai-core
+    
+    # Xóa thư mục .git để tránh xung đột (chọn lệnh phù hợp với hệ điều hành)
+    # Windows:
+    Remove-Item -Recurse -Force external/narrate-ai-core/.git
+    # macOS/Linux:
+    rm -rf external/narrate-ai-core/.git
+    ```
+
+3.  **Di chuyển vào thư mục AI Core**:
+    ```bash
+    cd external/narrate-ai-core
+    ```
+
+4.  **Vá lỗi Dependencies** (Bỏ qua bộ từ điển tiếng Nhật nặng):
+    ```bash
+    python -c "import re; p='pyproject.toml'; c=open(p).read(); open(p,'w').write(re.sub(r'misaki\[.*?\]', 'misaki[en]', c))"
+    ```
+
+5.  **Cài đặt môi trường Python** (Mất khoảng 3-5 phút):
+    ```bash
+    uv sync --no-dev
+    ```
+
+6.  **Khởi chạy Server** (Chọn lệnh phù hợp với phần cứng):
+    *   **Windows (Card đồ họa NVIDIA)**: `./start-gpu.ps1`
+    *   **Windows (Không có card rời)**: `./start-cpu.ps1`
+    *   **macOS (Apple Silicon M1/M2/M3)**: `uv run python -m kokoro_fastapi.main`
+
+7.  **Giữ cửa sổ Terminal mở** (Thu nhỏ, đừng đóng). Server cần chạy ngầm để Extension hoạt động.
+
+8.  Quay lại Chrome, click vào icon Extension → Nhấn **"Kiểm tra kết nối ngay"**.
+    *   Nếu thành công, bạn sẽ thấy giao diện chính với nút **"Quét trang hiện tại"**.
 
 ---
 
-### Cách 2: Setup cho Nhà phát triển (Từ Source code)
-1. **Clone & Build**:
-   ```bash
-   git clone https://github.com/tamle66/Narrate-AI.git
-   cd Narrate-AI
-   npm install
-   npm run build
-   ```
-2. **Nạp Extension**: Nạp thư mục `dist` vào Chrome qua **Load unpacked**.
-3. **Cài đặt Native Host**: Chạy `python native-host/install.py` tương tự như trên.
+### 💻 Cách 2: Setup cho Nhà phát triển (Từ Source code)
 
----
+> **Phù hợp cho**: Developer muốn tùy chỉnh hoặc đóng góp vào dự án.
 
-### ⚙️ Cấu hình AI Engine (Narrate AI Core)
-Mở Side Panel của extension và làm theo hướng dẫn trong mục **Setup Guide**:
+1.  **Clone Repository và Build**:
+    ```bash
+    git clone https://github.com/tamle66/Narrate-AI.git
+    cd Narrate-AI
+    npm install
+    npm run build
+    ```
 
-1. **Clone AI Engine**:
-   ```bash
-   git clone https://github.com/remsky/Kokoro-FastAPI.git external/narrate-ai-core
-   # Lưu ý: Xóa thư mục .git bên trong external/narrate-ai-core để tránh xung đột
-   ```
-2. **Cài đặt môi trường**:
-   Sử dụng [uv](https://github.com/astral-sh/uv) để đồng bộ môi trường:
-   ```bash
-   cd external/narrate-ai-core
-   uv sync --no-dev
-   ```
-3. **Khởi chạy Server**:
-   *   **Windows (NVIDIA GPU)**: `./start-gpu.ps1`
-   *   **macOS (Apple Silicon)**: `uv run python -m kokoro_fastapi.main`
+2.  **Nạp Extension**: 
+    *   Mở `chrome://extensions/`
+    *   Bật Developer Mode
+    *   Load unpacked → Chọn thư mục `dist`
+
+3.  **Cài đặt Native Host**:
+    ```bash
+    cd native-host
+    python install.py
+    # Nhập Extension ID khi được hỏi
+    ```
+
+4.  **Cài đặt AI Engine**: Làm theo **Bước 4** của Cách 1 (từ mục "Tải mã nguồn AI Core" trở đi).
 
 ---
 
 ## 📖 Cách sử dụng
 
-1. **Side Panel**: Click vào icon Extension để mở bảng điều khiển. Tại đây bạn có thể nhấn "Quét trang hiện tại" để đọc toàn bộ bài báo.
-2. **Context Menu**: Bôi đen một đoạn văn bản trên bất kỳ trang web nào, chuột phải và chọn **"Đọc đoạn đã chọn"**.
-3. **Karaoke Mode**: Khi đang đọc, câu hiện tại sẽ được in đậm và cuộn vào giữa màn hình trang web để bạn dễ quan sát.
+### Lần đầu sử dụng
+1.  **Khởi động Server**: Mở Terminal tại `external/narrate-ai-core` và chạy lệnh khởi chạy (xem Bước 4.6 ở trên).
+2.  **Mở Extension**: Click vào icon **Narrate AI** trên thanh công cụ Chrome.
+3.  **Kiểm tra kết nối**: Nếu thấy nút **"Quét trang hiện tại"**, bạn đã sẵn sàng!
+
+### Các tính năng chính
+
+#### 🔍 Đọc toàn bộ trang web
+1.  Mở một trang tin tức hoặc bài viết bất kỳ.
+2.  Click icon Extension → Nhấn **"Quét trang hiện tại"**.
+3.  Extension sẽ tự động trích xuất nội dung và bắt đầu đọc.
+
+#### ✂️ Đọc đoạn văn bản đã chọn
+1.  Bôi đen (highlight) đoạn văn bản bạn muốn nghe.
+2.  Chuột phải → Chọn **"Đọc đoạn đã chọn"**.
+
+#### 📍 Đọc từ vị trí cụ thể
+1.  Click chuột vào vị trí bạn muốn bắt đầu đọc.
+2.  Chuột phải → Chọn **"Đọc từ đây"**.
+3.  Extension sẽ đọc từ vị trí đó đến hết trang.
+
+#### 🎛️ Điều chỉnh giọng đọc và tốc độ
+*   **Giọng đọc**: Chọn từ dropdown (có hơn 60 giọng khác nhau).
+*   **Tốc độ**: Kéo thanh slider từ 0.5x (chậm) đến 2.0x (nhanh).
+*   **Điều hướng**: Dùng nút ⏮️ ⏭️ để chuyển câu, hoặc kéo thanh tiến trình.
 
 ---
 
-## ⚠️ Lưu ý kỹ thuật
+## 🔧 Xử lý sự cố (Troubleshooting)
 
-*   **Autoplay Policy**: Trình duyệt yêu cầu người dùng tương tác với trang web trước khi phát âm thanh tự động. Nếu thấy thông báo "Audio Permission Required", hãy click vào panel để bắt đầu.
-*   **C++ Build Error**: Nếu gặp lỗi khi cài đặt trên Windows, extension đã tích hợp sẵn hướng dẫn vá lỗi (Patch Dependencies) bằng cách sử dụng `misaki[en]` để bỏ qua bộ từ điển tiếng Nhật phức tạp.
+### ❌ Extension báo "Backend Missing"
+**Nguyên nhân**: Chưa cài đặt AI Engine hoặc đặt sai thư mục.
+
+**Giải pháp**:
+1.  Kiểm tra xem thư mục `external/narrate-ai-core` (hoặc `external/kokoro-engine`) có tồn tại không.
+2.  Nếu chưa có, làm lại **Bước 4** trong hướng dẫn cài đặt.
+3.  Nhấn nút **"Kiểm tra kết nối ngay"** trong Extension.
+
+### ❌ Server không khởi động được
+**Nguyên nhân**: Thiếu Python hoặc UV, hoặc port 8880 đã bị chiếm.
+
+**Giải pháp**:
+1.  Kiểm tra Python: `python --version` (cần ≥ 3.10)
+2.  Kiểm tra UV: `uv --version`
+3.  Kiểm tra port 8880:
+    *   **Windows**: `Get-NetTCPConnection -LocalPort 8880`
+    *   **macOS**: `lsof -i :8880`
+4.  Nếu port bị chiếm, tắt tiến trình đang dùng port đó.
+
+### ❌ Lỗi "Audio Permission Required"
+**Nguyên nhân**: Chrome chặn autoplay audio.
+
+**Giải pháp**: Click vào bất kỳ đâu trong Extension panel để cho phép phát âm thanh.
+
+### ❌ Không đọc được nội dung trang
+**Nguyên nhân**: Content script chưa được inject.
+
+**Giải pháp**:
+1.  Nhấn F5 để refresh trang web.
+2.  Thử lại tính năng "Quét trang hiện tại".
+
+### 💡 Cần trợ giúp thêm?
+*   Kiểm tra file log tại: `native-host/host_debug.log`
+*   Mở Console trong Extension (F12 → Tab Console) để xem lỗi chi tiết.
+*   Tạo Issue trên [GitHub](https://github.com/tamle66/Narrate-AI/issues).
+
+---
+
+## ⚠️ Lưu ý quan trọng
+
+*   **Hiệu năng**: Lần đầu khởi động Server sẽ mất 10-15 giây để tải mô hình AI vào RAM/VRAM.
+*   **Bộ nhớ**: Server cần khoảng 2-4GB RAM. Nếu dùng GPU, cần thêm 2GB VRAM.
+*   **Tắt Server**: Khi không dùng, bạn có thể tắt Server bằng cách nhấn `Ctrl + C` trong Terminal hoặc đóng cửa sổ Terminal.
+*   **Bảo mật**: Tất cả dữ liệu được xử lý cục bộ, không gửi lên Internet.
 
 ---
 

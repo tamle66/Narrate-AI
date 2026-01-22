@@ -42,6 +42,9 @@ export function useNativeHost() {
                     }
                 } else if (msg.status === 'backend_missing') {
                     setNativeStatus('backend_missing');
+                    if (msg.log) {
+                        useStore.getState().addStartupLog(msg.log);
+                    }
                 } else if (msg.status === 'error') {
                     console.error("Native Host Error:", msg.message);
                     setNativeStatus('error');

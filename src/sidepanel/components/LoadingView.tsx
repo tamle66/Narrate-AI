@@ -226,6 +226,16 @@ export function LoadingView({ status, onRetry }: LoadingViewProps) {
                     <span>Mẹo: Sau khi chạy xong Bước 4, hãy <span className="text-white">thu nhỏ (Minimize)</span> Terminal. Đừng đóng hẳn cửa sổ để Server có thể tiếp tục chạy ngầm.</span>
                 </div>
 
+                {status === 'backend_missing' && (
+                    <div className="p-3 bg-error/10 border border-error/20 rounded-xl text-[10px] text-error flex items-start gap-2 animate-in slide-in-from-bottom-2 duration-300">
+                        <Info size={14} className="shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                            <p className="font-bold uppercase tracking-tight">Backend folder not found!</p>
+                            <p className="opacity-80">Đảm bảo thư mục AI Core nằm tại: <code className="bg-black/40 px-1 rounded text-white">external/narrate-ai-core</code> (hoặc <code className="bg-black/40 px-1 rounded text-white">kokoro-engine</code>).</p>
+                        </div>
+                    </div>
+                )}
+
                 <button
                     onClick={onRetry}
                     className="w-full h-12 flex items-center justify-center gap-3 bg-primary/10 hover:bg-primary border border-primary/20 text-primary hover:text-black rounded-xl transition-all duration-300 font-bold text-xs uppercase tracking-widest outline-none shadow-lg shadow-primary/5"
