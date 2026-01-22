@@ -1,5 +1,5 @@
 import { RefreshCw, Copy, Info, Zap, Cpu, Terminal, Laptop } from 'lucide-react';
-import logo from '../store/logo.png';
+import logo from '../../assets/logo.png';
 import { useState, useEffect } from 'react';
 import { cn } from '../../shared/utils';
 
@@ -126,15 +126,15 @@ export function LoadingView({ status, onRetry }: LoadingViewProps) {
                         title="Tải mã nguồn (Clone)"
                         description="Tải Narrate AI Core. Lưu ý: Xóa folder .git bên trong sau khi tải để tránh lỗi xung đột Git."
                         command={isMac
-                            ? "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine && rm -rf external/kokoro-engine/.git"
-                            : "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine; Remove-Item -Recurse -Force external/kokoro-engine/.git"}
+                            ? "git clone https://github.com/remsky/Kokoro-FastAPI.git external/narrate-ai-core && rm -rf external/narrate-ai-core/.git"
+                            : "git clone https://github.com/remsky/Kokoro-FastAPI.git external/narrate-ai-core; Remove-Item -Recurse -Force external/narrate-ai-core/.git"}
                     />
 
                     <Step
                         number={2}
                         title="Vá lỗi (Patch Dependencies)"
                         description="Loại bỏ thư viện tiếng Nhật gây lỗi biên dịch C++ để ưu tiên tiếng Anh/Việt."
-                        command={`cd external/kokoro-engine; python -c "import re; p='pyproject.toml'; c=open(p).read(); open(p,'w').write(re.sub(r'misaki\\[.*?\\\]', 'misaki[en]', c))"`}
+                        command={`cd external/narrate-ai-core; python -c "import re; p='pyproject.toml'; c=open(p).read(); open(p,'w').write(re.sub(r'misaki\\[.*?\\\]', 'misaki[en]', c))"`}
                     />
 
                     <Step

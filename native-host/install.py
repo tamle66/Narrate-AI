@@ -3,19 +3,19 @@ import sys
 import json
 import winreg
 
-HOST_NAME = "com.kokoro.tts.host"
+HOST_NAME = "com.narrate.ai.host"
 ALLOWED_ORIGIN = "chrome-extension://<YOUR_EXTENSION_ID>/" # Update this!
 
 def install():
     # 1. Prepare paths
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    host_py = os.path.join(current_dir, "kokoro_host.py")
+    host_py = os.path.join(current_dir, "narrate_host.py")
     wrapper_bat = os.path.join(current_dir, "wrapper.bat")
     manifest_path = os.path.join(current_dir, "host_manifest.json")
     
     # 2. Get Extension ID
     print("----------------------------------------------------------------")
-    print("SETUP KOKORO TTS NATIVE HOST")
+    print("SETUP NARRATE AI NATIVE HOST")
     print("----------------------------------------------------------------")
     
     # Try to read existing manifest to see if ID is already set
@@ -49,7 +49,7 @@ def install():
     # 4. Create Manifest
     manifest = {
         "name": HOST_NAME,
-        "description": "Native Host for Kokoro TTS",
+        "description": "Native Host for Narrate AI",
         "path": wrapper_bat,
         "type": "stdio",
         "allowed_origins": [final_origin]

@@ -34,16 +34,16 @@ const manifest = defineManifest({
     }
   ],
   icons: {
-    "16": "src/sidepanel/store/logo.png",
-    "48": "src/sidepanel/store/logo.png",
-    "128": "src/sidepanel/store/logo.png"
+    "16": "src/assets/logo.png",
+    "48": "src/assets/logo.png",
+    "128": "src/assets/logo.png"
   },
   action: {
     "default_title": "Open Narrate AI",
     "default_icon": {
-      "16": "src/sidepanel/store/logo.png",
-      "48": "src/sidepanel/store/logo.png",
-      "128": "src/sidepanel/store/logo.png"
+      "16": "src/assets/logo.png",
+      "48": "src/assets/logo.png",
+      "128": "src/assets/logo.png"
     }
   }
 })

@@ -1,6 +1,6 @@
 {
-  "name": "com.kokoro.tts.host",
-  "description": "Native Host for Kokoro TTS",
+  "name": "com.narrate.ai.host",
+  "description": "Native Host for Narrate AI",
   "path": "D:\\04-Dev\\TTS-Extension\\native-host\\wrapper.bat",
   "type": "stdio",
   "allowed_origins": [

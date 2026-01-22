@@ -19,7 +19,7 @@ def log(msg):
 
 # Configuration
 PORT = 8880
-BACKEND_DIR_NAME = "kokoro-engine"
+BACKEND_DIR_NAME = "narrate-ai-core"
 # Determine absolute path for backend relative to this script: ../external/kokoro-engine
 BACKEND_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "external"))
 BACKEND_ABS_PATH = os.path.join(BACKEND_ROOT_DIR, BACKEND_DIR_NAME)
@@ -144,7 +144,7 @@ def install_backend():
     if not os.path.exists(target_dir):
         try:
             log(f"Cloning repo to {target_dir}...")
-            send_message({"status": "installing", "log": f"[SETUP] Cloning Kokoro-FastAPI..."})
+            send_message({"status": "installing", "log": f"[SETUP] Cloning Narrate AI Core..."})
             subprocess.run(['git', 'clone', 'https://github.com/remsky/Kokoro-FastAPI.git', target_dir], check=True)
             log("Clone successful.")
         except Exception as e:
@@ -228,7 +228,7 @@ def install_backend():
 def start_server():
     server_path = find_server_script()
     if not server_path:
-        return {"status": "backend_missing", "message": "Kokoro-FastAPI not found. Install required."}
+        return {"status": "backend_missing", "message": "Narrate AI Core not found. Install required."}
 
     if is_port_open(PORT):
         log("Server already running on port 8880")

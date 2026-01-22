@@ -34,34 +34,45 @@
 
 ## 🚀 Hướng dẫn cài đặt
 
-### 1. Cài đặt Extension
-1. Clone repo này về máy:
+### Cách 1: Sử dụng bản Build sẵn (Dành cho người dùng)
+1.  **Tải xuống**: Click vào tab **Releases** trên GitHub và tải file `Narrate-AI-v1.0.0.zip`.
+2.  **Giải nén**: Giải nén file ZIP vào một thư mục cố định trên ổ đĩa (Ví dụ: `D:\Apps\Narrate-AI`). **Lưu ý**: Đừng để trong thư mục *Downloads* vì bạn có thể vô tình xóa nó sau này.
+3.  **Cài đặt Extension**:
+    *   Mở Chrome, truy cập `chrome://extensions/`.
+    *   Bật **Developer Mode** (Góc trên cùng bên phải).
+    *   Chọn **Load unpacked**, sau đó chọn thư mục `extension` bên trong thư mục bạn vừa giải nén.
+4.  **Kết nối Native Host**:
+    *   Vào thư mục `native-host`.
+    *   Mở Terminal/PowerShell tại đây và chạy lệnh: `python install.py`.
+    *   Copy **ID** của extension (hiển thị ở trang `chrome://extensions/`) và dán vào cửa sổ Terminal khi được hỏi.
+
+---
+
+### Cách 2: Setup cho Nhà phát triển (Từ Source code)
+1. **Clone & Build**:
    ```bash
-   git clone https://github.com/tamle66/TTS-Extension.git
-   cd TTS-Extension
-   ```
-2. Cài đặt Dependencies:
-   ```bash
+   git clone https://github.com/tamle66/Narrate-AI.git
+   cd Narrate-AI
    npm install
-   ```
-3. Build dự án:
-   ```bash
    npm run build
    ```
-4. Mở Chrome, truy cập `chrome://extensions/`. Bật **Developer Mode** và chọn **Load unpacked**, sau đó chọn thư mục `dist` trong project.
+2. **Nạp Extension**: Nạp thư mục `dist` vào Chrome qua **Load unpacked**.
+3. **Cài đặt Native Host**: Chạy `python native-host/install.py` tương tự như trên.
 
-### 2. Cấu hình AI Engine (Narrate AI Core)
+---
+
+### ⚙️ Cấu hình AI Engine (Narrate AI Core)
 Mở Side Panel của extension và làm theo hướng dẫn trong mục **Setup Guide**:
 
 1. **Clone AI Engine**:
    ```bash
-   git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine
-   # Lưu ý: Xóa thư mục .git bên trong external/kokoro-engine để tránh xung đột
+   git clone https://github.com/remsky/Kokoro-FastAPI.git external/narrate-ai-core
+   # Lưu ý: Xóa thư mục .git bên trong external/narrate-ai-core để tránh xung đột
    ```
 2. **Cài đặt môi trường**:
    Sử dụng [uv](https://github.com/astral-sh/uv) để đồng bộ môi trường:
    ```bash
-   cd external/kokoro-engine
+   cd external/narrate-ai-core
    uv sync --no-dev
    ```
 3. **Khởi chạy Server**:

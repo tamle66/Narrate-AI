@@ -31,7 +31,7 @@ Thumbs.db
 .env.test.local
 .env.production.local
 external/
-external/kokoro-engine/
+external/narrate-ai-core/
 
 # Vite / NPM
 npm-debug.log*

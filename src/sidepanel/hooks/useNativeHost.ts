@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 
-const HOST_NAME = "com.kokoro.tts.host";
+const HOST_NAME = "com.narrate.ai.host";
 
 export function useNativeHost() {
     const setNativeStatus = useStore((state) => state.setNativeStatus);
