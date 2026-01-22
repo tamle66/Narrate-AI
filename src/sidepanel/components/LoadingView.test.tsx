@@ -6,16 +6,16 @@ import { LoadingView } from './LoadingView.tsx';
 describe('LoadingView', () => {
     it('should render connecting state', () => {
         render(<LoadingView status="starting" onRetry={() => { }} />);
-        expect(screen.getByText(/Initializing Engine/i)).toBeInTheDocument();
-        // expect(screen.getByText(/LOADING/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Kokoro Engine/i })).toBeInTheDocument();
+        expect(screen.getByText(/Connecting/i)).toBeInTheDocument();
     });
 
     it('should render error state with retry button', () => {
         const handleRetry = vi.fn();
         render(<LoadingView status="error" onRetry={handleRetry} />);
-        expect(screen.getByText(/Connection Failed/i)).toBeInTheDocument();
+        expect(screen.getByText(/ERROR/i)).toBeInTheDocument();
 
-        const retryBtn = screen.getByRole('button', { name: /Thử lại/i });
+        const retryBtn = screen.getByRole('button', { name: /Kiểm tra kết nối ngay/i });
         fireEvent.click(retryBtn);
         expect(handleRetry).toHaveBeenCalled();
     });

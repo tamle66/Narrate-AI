@@ -22,6 +22,8 @@ describe('PlayerView', () => {
                 speed={1.0}
                 availableVoices={['af_bella']}
                 onBack={() => { }}
+                segments={[]}
+                currentSegmentIndex={0}
             />
         );
         expect(screen.getByText(/Chapter 1: The Beginning/i)).toBeInTheDocument();

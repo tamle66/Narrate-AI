@@ -13,7 +13,9 @@ describe('useStore', () => {
                 currentText: '',
                 currentTime: 0,
                 duration: 0,
-                isAudioBlocked: false
+                isAudioBlocked: false,
+                segments: [],
+                currentSegmentIndex: 0
             }
         });
     });

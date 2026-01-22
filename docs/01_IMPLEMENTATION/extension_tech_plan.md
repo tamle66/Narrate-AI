@@ -68,10 +68,12 @@ TTS-Extension/
 export interface PlaybackState {
   isPlaying: boolean;
   isLoading: boolean;
-  duration: number;
-  currentTime: number;
   currentText: string;
-  sourceUrl: string;
+  currentTime: number;
+  duration: number;
+  isAudioBlocked: boolean;
+  segments: string[];
+  currentSegmentIndex: number;
 }
 
 // User Settings

@@ -124,8 +124,10 @@ export function LoadingView({ status, onRetry }: LoadingViewProps) {
                     <Step
                         number={1}
                         title="Tải mã nguồn (Clone)"
-                        description="Tải bộ máy AI Kokoro từ Github chính thức về máy."
-                        command="git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine"
+                        description="Tải Kokoro Engine. Lưu ý: Xóa folder .git bên trong sau khi tải để tránh lỗi xung đột Git."
+                        command={isMac
+                            ? "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine && rm -rf external/kokoro-engine/.git"
+                            : "git clone https://github.com/remsky/Kokoro-FastAPI.git external/kokoro-engine; Remove-Item -Recurse -Force external/kokoro-engine/.git"}
                     />
 
                     <Step

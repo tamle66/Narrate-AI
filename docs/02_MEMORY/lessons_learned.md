@@ -54,6 +54,11 @@
 - **Problem:** `Readability` can fail on some news sites (like VietnamNet) or grab too much noise (Coursera sidebars).
 - **Solution:** **Dual-strategy approach**. Try `Readability` first for high-quality articles, but have a prioritized list of CSS Selectors (`article`, `.content-detail`, etc.) as a fallback. Combined with a `preCleanDOM` step to remove known noisy elements (nav, sidebars), this yields reliable results across 99% of the web.
 
+### 11. Maintaining Test Correctness during Refactoring
+- **Problem:** Adding required properties to global states (Zustand) or Component Props can break multiple tests with cryptic type errors.
+- **Solution:** Always perform a full test run (`npm test`) after modifying Core Types (`PlaybackState`, `Settings`). Update mock state objects in `beforeEach` and default props in test files to match the new interfaces immediately.
+- **Learning:** Tests are a "Living Spec". If they aren't updated alongside the code, they lose their value as a safety net.
+
 ## Best Practices
 - **Transparency Mode:** Providing clear manual setup steps with explanations is often better than a black-box automated script that might fail silently. It builds trust and allows technical users to troubleshoot their own environment.
 - **Logging:** Maintaining a scrollable debug log in the UI is invaluable for debugging "invisible" background/native-host background processes.

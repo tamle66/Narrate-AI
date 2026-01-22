@@ -16,6 +16,7 @@ const chromeMock = {
     },
     sidePanel: {
         open: vi.fn(),
+        setPanelBehavior: vi.fn().mockResolvedValue(undefined),
     }
 };
 
@@ -41,7 +42,7 @@ describe('Background Service', () => {
 
         expect(chromeMock.contextMenus.create).toHaveBeenCalledWith({
             id: 'read_from_here',
-            title: 'Đọc từ đây',
+            title: 'Đọc từ đây đến hết trang',
             contexts: ['selection']
         });
     });
