@@ -63,3 +63,52 @@
 - **Transparency Mode:** Providing clear manual setup steps with explanations is often better than a black-box automated script that might fail silently. It builds trust and allows technical users to troubleshoot their own environment.
 - **Logging:** Maintaining a scrollable debug log in the UI is invaluable for debugging "invisible" background/native-host background processes.
 - **CORS:** Remember that Chrome Extensions have their own origin. Even for `localhost`, ensure the backend CORS policy allows the extension's `chrome-extension://<id>` origin or use `*` for local dev.
+
+## Release & Documentation
+
+### 12. User-Centric Documentation
+- **Problem:** Technical documentation often assumes users have prerequisite knowledge (Git, Python, Terminal usage).
+- **Solution:** Create a **Prerequisites section** listing all required tools with:
+  - Direct download links
+  - Installation verification commands
+  - Platform-specific instructions (Windows vs macOS)
+- **Learning:** Even experienced developers appreciate clear prerequisites when trying new tools. For low-tech users, it's the difference between success and abandonment.
+
+### 13. Contextual Command Instructions
+- **Problem:** Users don't know where to run terminal commands or what directory they should be in.
+- **Solution:** For every command block:
+  - State the working directory explicitly ("Run from project root", "Run from external/narrate-ai-core")
+  - Explain what the command does in plain language
+  - Provide time estimates for long-running operations
+- **Learning:** "Where" is as important as "what" when giving command-line instructions.
+
+### 14. Flexible Path Discovery
+- **Problem:** Hardcoding backend folder names (`narrate-ai-core`) breaks when users clone with default repo names or rename folders.
+- **Solution:** Implement **multiple fallback paths** in discovery logic:
+  ```python
+  POSSIBLE_PATHS = [
+      "external/narrate-ai-core",
+      "external/kokoro-engine", 
+      "external/Kokoro-FastAPI",
+      "backend"  # legacy
+  ]
+  ```
+- **Learning:** Real-world usage is messier than ideal design. Build resilience through fallbacks.
+
+### 15. Release Package Structure
+- **Problem:** Distributing only the built extension leaves users confused about where to put the backend.
+- **Solution:** Create a **complete distribution package**:
+  - `extension/` - Built Chrome extension
+  - `native-host/` - Installation scripts
+  - `external/` - Empty folder showing where to clone backend
+  - `README.md` - Complete setup guide
+- **Learning:** Physical folder structure serves as documentation. An empty `external/` folder communicates intent better than text alone.
+
+### 16. Progressive Disclosure in Troubleshooting
+- **Problem:** Users encounter errors but don't know how to debug.
+- **Solution:** Add a **Troubleshooting section** to README with:
+  - Common error messages as headers
+  - Root cause explanation
+  - Step-by-step resolution
+  - Links to log files for advanced debugging
+- **Learning:** Good documentation anticipates failure modes and provides escape hatches.

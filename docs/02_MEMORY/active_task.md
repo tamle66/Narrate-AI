@@ -1,29 +1,41 @@
-# Active Task: UI/UX Refinement & Cross-Platform Support
+# Active Task: v1.0.1 Release Preparation & Documentation
 
 ## Status
-- **Current Task:** Multi-OS Support & Premium UI Polish
+- **Current Task:** Rebranding to "Narrate AI" & Release Preparation
 - **Start Date:** 2026-01-22
 - **Completion Date:** 2026-01-22
 
 ## Progress
-- [x] Implement **Cross-platform Setup Guide** (Auto-detecting & Toggle for Windows/macOS).
-- [x] Add macOS-specific instructions for **Apple Silicon (M1/M2/M3)** optimization.
-- [x] Refine **Karaoke Player UI** (Centered text, responsive layout, fixed overlaps).
-- [x] Implement **Premium Custom Scrollbars** (Ultra-thin, primary orange theme, active glow).
-- [x] Enhance **Content Extraction logic**: 
-    - Fixed VietnamNet extraction (Dual-strategy Readability/Fallback).
-    - Multi-selector support for various news/learning platforms.
-- [x] Fix **Player View responsive issues** (preventing title coverage in wide windows).
-- [x] Polish **Transparency Logs** with better contrast and visibility.
+- [x] **Rebranding**: Renamed project from "Kokoro TTS Extension" to "Narrate AI"
+  - Updated `package.json`, `vite.config.ts`, `README.md`, `PRD.md`
+  - Updated native host name to `com.narrate.ai.host`
+  - Renamed backend directory references to `narrate-ai-core`
+  - Updated all UI text and branding elements
+- [x] **Backend Discovery Enhancement**:
+  - Added fallback paths for multiple backend folder names
+  - Improved error messages with detailed path information
+  - Added UI warning when backend is missing
+- [x] **Documentation Overhaul**:
+  - Added comprehensive Prerequisites section
+  - Restructured installation guide for end-users vs developers
+  - Added detailed step-by-step instructions with context
+  - Created Troubleshooting section with common issues
+  - Improved usage guide with feature-specific instructions
+- [x] **Release Package**:
+  - Created distribution structure (extension/, native-host/, external/)
+  - Generated `Narrate-AI-v1.0.1.zip` with complete setup
+  - Prepared GitHub Release title and description
+- [x] **Testing**: All 7 tests passing (5 test files)
 
 ## Encountered Issues & Solutions
-- **Responsive Overlap:** Wide windows caused the text box to cover the title. Fixed by applying `max-h-64` and `flex-shrink-0`.
-- **Visibility:** Default scrollbars were hard to see in dark mode. Fixed by using high-contrast primary orange thumb.
-- **macOS Complexity:** Shell commands for stopping processes differ from PowerShell. Added specific `kill -9 $(lsof -t -i:8880)` instructions.
+- **Backend Path Confusion**: Users with different clone names couldn't connect. Fixed by adding multiple fallback paths (`narrate-ai-core`, `kokoro-engine`, `Kokoro-FastAPI`).
+- **Low-tech User Barrier**: Original README assumed technical knowledge. Fixed by adding Prerequisites section with download links and verification commands.
+- **Missing Context**: Users didn't know where to run commands. Fixed by explicitly stating working directory for each step.
 
 ## Learnings
-- **User Agency:** Providing an OS toggle builds confidence even if auto-detection works perfectly.
-- **Scrollbar as UI Element:** Custom scrollbars aren't just for utility; they contribute heavily to the "premium" feel of a dark-themed app.
-- **Flexible Aspect Ratios:** Hardcoded aspect ratios (like 4/3) can break layouts in resizable containers like Side Panels. Prefer `min-h` + `max-h`.
+- **User-Centric Documentation**: Even simple commands need context (where to run, what they do, how long they take).
+- **Prerequisites Matter**: Listing required tools upfront prevents frustration mid-installation.
+- **Flexible Path Discovery**: Hardcoding folder names creates fragility. Multiple fallbacks improve robustness.
+- **Release Packaging**: Including empty `external/` folder in ZIP helps users understand project structure.
 
 ✅ Done [2026-01-22]
