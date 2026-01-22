@@ -7,7 +7,7 @@ import { ReadyView } from './components/ReadyView';
 import { PlayerView } from './components/PlayerView';
 
 export default function App() {
-    const { status, sendCommand, connect } = useNativeHost();
+    const { status, connect } = useNativeHost();
     const { playback, logs, settings, availableVoices, setPlayback, updateSettings, setAvailableVoices } = useStore();
     const { playText, togglePlay, seek, stop, nextSegment, prevSegment } = useAudio();
 
@@ -155,8 +155,6 @@ export default function App() {
                 <LoadingView
                     status={status}
                     onRetry={connect}
-                    onStartServer={() => sendCommand('start_server')}
-                    onInstall={() => sendCommand('install_backend')}
                 />
             </div>
         );
@@ -171,7 +169,7 @@ export default function App() {
                 {playback.isPlaying || playback.currentText || playback.isLoading ? (
                     <div className="flex-1 flex flex-col relative overflow-hidden">
                         <PlayerView
-                            title={playback.currentText.substring(0, 30) || "Loading..."}
+                            title={playback.currentText ? (playback.currentText.length > 50 ? playback.currentText.substring(0, 47) + "..." : playback.currentText) : "Loading..."}
                             isPlaying={playback.isPlaying}
                             isLoading={playback.isLoading}
                             togglePlay={togglePlay}
@@ -187,8 +185,10 @@ export default function App() {
                             onSpeedChange={(s) => updateSettings({ speed: s })}
                             onBack={() => {
                                 stop();
-                                setPlayback({ currentText: '', isPlaying: false, isLoading: false });
+                                setPlayback({ currentText: '', isPlaying: false, isLoading: false, segments: [], currentSegmentIndex: 0 });
                             }}
+                            segments={playback.segments}
+                            currentSegmentIndex={playback.currentSegmentIndex}
                         />
 
                         {playback.isAudioBlocked && (

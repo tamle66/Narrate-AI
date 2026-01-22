@@ -17,12 +17,15 @@ interface PlayerViewProps {
     onVoiceChange?: (voice: string) => void;
     onSpeedChange?: (speed: number) => void;
     onBack: () => void;
+    segments: string[];
+    currentSegmentIndex: number;
 }
 
 export function PlayerView({
     title, isPlaying, isLoading, togglePlay, currentTime, duration,
     voice, speed, availableVoices,
-    onSeek, onNext, onPrev, onVoiceChange, onSpeedChange, onBack
+    onSeek, onNext, onPrev, onVoiceChange, onSpeedChange, onBack,
+    segments, currentSegmentIndex
 }: PlayerViewProps) {
 
     const formatTime = (time: number) => {
@@ -49,44 +52,53 @@ export function PlayerView({
                 </div>
             </div>
             {/* Marquee Effect container */}
-            <div className="relative overflow-hidden h-7 w-full mask-linear-fade group cursor-default">
+            <div className="relative overflow-hidden h-8 w-full mask-linear-fade group cursor-default mb-4 flex-shrink-0">
                 <div className="whitespace-nowrap absolute animate-marquee will-change-transform group-hover:pause">
                     <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
                 </div>
             </div>
-            <p className="text-[10px] text-white/40 mt-1 truncate">Source: local selection</p>
 
-            {/* Visualizer / Artwork */}
-            <div className="w-full aspect-square max-h-48 mb-6 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center relative overflow-hidden group mx-auto shadow-inner">
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent"></div>
+            {/* Focused Text Display Area */}
+            <div className="w-full min-h-[160px] max-h-64 mb-6 rounded-2xl bg-[#0a0a0a] border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group mx-auto shadow-2xl p-8 text-center px-10 flex-shrink-0">
+                {/* Background Glow */}
+                <div className={cn(
+                    "absolute -bottom-10 w-48 h-24 rounded-full bg-primary/10 blur-[60px] transition-opacity duration-1000",
+                    isPlaying ? "opacity-100" : "opacity-0"
+                )}></div>
+
+                <div
+                    key={currentSegmentIndex}
+                    className="relative z-10 w-full animate-in fade-in zoom-in-95 duration-500"
+                >
+                    {segments.length > 0 ? (
+                        <div className="space-y-4">
+                            <span className="text-primary/40 text-[9px] font-bold uppercase tracking-[0.3em] mb-4 block">Now Speaking</span>
+                            <h3 className="text-xl md:text-2xl font-medium text-white/90 leading-relaxed tracking-tight">
+                                "{segments[currentSegmentIndex]}"
+                            </h3>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3 opacity-20">
+                            <div className="flex gap-1">
+                                {[0, 1, 2, 3, 4, 5].map((i) => (
+                                    <span key={i} className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}></span>
+                                ))}
+                            </div>
+                            <span className="text-[10px] uppercase font-bold tracking-widest">Waiting for text...</span>
+                        </div>
+                    )}
+                </div>
 
                 {isLoading && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
                         <div className="flex gap-1 mb-3">
                             <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
                             <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
                             <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
                         </div>
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-bold animate-pulse">Generating Audio</span>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold animate-pulse">Encoding Audio...</span>
                     </div>
                 )}
-
-                {/* Glowing Orb */}
-                <div className={cn(
-                    "w-24 h-24 rounded-full bg-primary/20 blur-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
-                    isPlaying ? "animate-pulse-glow" : (isLoading ? "animate-spin-slow opacity-50" : "opacity-30")
-                )}></div>
-
-                {/* Equalizer Bars */}
-                <div className="flex items-end justify-center gap-1 h-16 relative z-10">
-                    {[0.8, 1.1, 0.9, 1.2, 0.7, 1.3, 1.0].map((delay, i) => (
-                        <div
-                            key={i}
-                            className={cn("w-1 bg-primary rounded-t-sm", isPlaying ? "animate-equalizer" : "h-[10%] transition-all")}
-                            style={{ animationDuration: `${delay}s`, animationPlayState: isPlaying ? 'running' : 'paused' }}
-                        ></div>
-                    ))}
-                </div>
             </div>
 
             {/* Progress Control */}

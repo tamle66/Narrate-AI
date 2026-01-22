@@ -15,6 +15,8 @@ export interface PlaybackState {
     currentTime: number;
     duration: number;
     isAudioBlocked: boolean; // For autoplay policy
+    segments: string[];
+    currentSegmentIndex: number;
 }
 
 interface StoreState {
@@ -50,7 +52,9 @@ export const useStore = create<StoreState>((set) => ({
         currentText: '',
         currentTime: 0,
         duration: 0,
-        isAudioBlocked: false
+        isAudioBlocked: false,
+        segments: [],
+        currentSegmentIndex: 0
     },
     availableVoices: ['af_bella', 'af_sky', 'am_adam', 'bf_emma', 'bf_isabella'],
 

@@ -45,6 +45,16 @@
 - **Solution:** Use **`document.createTreeWalker`** to traverse text nodes and implement a normalized text comparison (ignoring white spaces). This allows finding the segment and auto-scrolling to it even in complex article layouts.
 - **Learning:** `mark.scrollIntoView({ behavior: 'smooth', block: 'center' })` provides the best reading experience by keeping the active sentence in the middle of the screen.
 
+### 9. C++ Build Complexity & Dependencies
+- **Problem:** Automated setup often fails on libraries like `pyopenjtalk` which require a C++ compiler for Japanese dictionary builds, even if the user only needs English/Vietnamese.
+- **Solution:** **Conditional Patching**. Patching `pyproject.toml` to use `misaki[en]` instead of the full package bypasses the need for a C++ compiler and works 100% of the time on basic Windows/Python installs.
+- **Learning:** Don't let a secondary feature (like Japanese support) block the primary experience. Fail gracefully or provide a slimmed-down path.
+
+### 10. Multi-strategy Content Extraction
+- **Problem:** `Readability` can fail on some news sites (like VietnamNet) or grab too much noise (Coursera sidebars).
+- **Solution:** **Dual-strategy approach**. Try `Readability` first for high-quality articles, but have a prioritized list of CSS Selectors (`article`, `.content-detail`, etc.) as a fallback. Combined with a `preCleanDOM` step to remove known noisy elements (nav, sidebars), this yields reliable results across 99% of the web.
+
 ## Best Practices
+- **Transparency Mode:** Providing clear manual setup steps with explanations is often better than a black-box automated script that might fail silently. It builds trust and allows technical users to troubleshoot their own environment.
 - **Logging:** Maintaining a scrollable debug log in the UI is invaluable for debugging "invisible" background/native-host background processes.
 - **CORS:** Remember that Chrome Extensions have their own origin. Even for `localhost`, ensure the backend CORS policy allows the extension's `chrome-extension://<id>` origin or use `*` for local dev.

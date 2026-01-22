@@ -35,12 +35,6 @@ export function useNativeHost() {
                     setNativeStatus('running');
                 } else if (msg.status === 'stopped') {
                     setNativeStatus('stopped');
-                    // Auto-start logic
-                    const { settings } = useStore.getState();
-                    if (settings.autoStart) {
-                        console.log("Auto-starting server...");
-                        port.postMessage({ command: 'start_server' });
-                    }
                 } else if (msg.status === 'starting' || msg.status === 'installing') {
                     setNativeStatus(msg.status);
                     if (msg.log) {
@@ -83,6 +77,16 @@ export function useNativeHost() {
             portRef.current?.disconnect();
         };
     }, [connect]);
+
+    // Periodic check for server status
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (portRef.current && (nativeStatus === 'stopped' || nativeStatus === 'error' || nativeStatus === 'backend_missing')) {
+                portRef.current.postMessage({ command: 'check_status' });
+            }
+        }, 5000); // Check every 5 seconds
+        return () => clearInterval(interval);
+    }, [nativeStatus]);
 
     const sendCommand = useCallback((cmd: string, payload?: Record<string, any>) => {
         if (portRef.current) {

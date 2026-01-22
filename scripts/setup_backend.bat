@@ -23,24 +23,28 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-set "BACKEND_DIR=backend"
+set "EXTERNAL_DIR=..\external"
+set "ENGINE_DIR=%EXTERNAL_DIR%\kokoro-engine"
 
-if exist "%BACKEND_DIR%" (
-    echo [INFO] Backend folder already exists.
+if not exist "%EXTERNAL_DIR%" mkdir "%EXTERNAL_DIR%"
+
+if exist "%ENGINE_DIR%" (
+    echo [INFO] Kokoro Engine already exists in %ENGINE_DIR%.
     choice /M "Do you want to pull latest changes?"
-    if errorlevel 1 (
-        cd "%BACKEND_DIR%"
-        git pull
-        cd ..
-    )
+    if errorlevel 2 goto :skip_pull
+    
+    cd /d "%ENGINE_DIR%"
+    git pull
+    cd /d %~dp0
 ) else (
-    echo [INFO] Cloning Kokoro-FastAPI repo into '%BACKEND_DIR%'...
-    git clone https://github.com/remsky/Kokoro-FastAPI.git "%BACKEND_DIR%"
+    echo [INFO] Cloning Kokoro-FastAPI repo into '%ENGINE_DIR%'...
+    git clone https://github.com/remsky/Kokoro-FastAPI.git "%ENGINE_DIR%"
 )
 
+:skip_pull
 echo.
 echo ========================================================
-echo [INFO] Backend code is ready in: %CD%\%BACKEND_DIR%
+echo [INFO] Backend code is ready in: %ENGINE_DIR%
 echo.
 echo To run the backend, you need 'uv' (Python package manager).
 echo We will attempt to install it now.
@@ -57,8 +61,5 @@ echo ========================================================
 echo SETUP COMPLETE!
 echo.
 echo The Extension can now try to auto-start the server.
-echo Or you can manually run:
-echo    cd backend
-echo    start-cpu.ps1
 echo ========================================================
 pause

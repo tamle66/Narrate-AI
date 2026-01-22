@@ -97,10 +97,12 @@ export function useAudio() {
 
         const audio = audioCacheRef.current.get(index);
         if (!audio) {
-            setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
+            setPlayback({ isLoading: true, currentTime: 0, duration: 0, currentSegmentIndex: index });
             fetchSegment(index, currentPlaybackId);
             return;
         }
+
+        setPlayback({ currentSegmentIndex: index });
 
         addLog(`Playing segment ${index + 1}/${queueRef.current.length}`);
 
@@ -248,7 +250,16 @@ export function useAudio() {
         cancelAllFetches();
         queueRef.current = [];
         currentIndexRef.current = 0;
-        setPlayback({ isPlaying: false, currentTime: 0, duration: 0, isAudioBlocked: false, isLoading: false, currentText: '' });
+        setPlayback({
+            isPlaying: false,
+            currentTime: 0,
+            duration: 0,
+            isAudioBlocked: false,
+            isLoading: false,
+            currentText: '',
+            segments: [],
+            currentSegmentIndex: 0
+        });
     }, [cancelAllFetches]);
 
     const playText = useCallback(async (text: string, title?: string) => {
@@ -271,7 +282,15 @@ export function useAudio() {
         queueRef.current = segments;
         currentIndexRef.current = 0;
         const displayTitle = title || segments[0].substring(0, 50);
-        setPlayback({ currentText: displayTitle, currentTime: 0, duration: 0, isPlaying: true, isLoading: true });
+        setPlayback({
+            currentText: displayTitle,
+            currentTime: 0,
+            duration: 0,
+            isPlaying: true,
+            isLoading: true,
+            segments: segments,
+            currentSegmentIndex: 0
+        });
 
         addLog(`Starting playback: ${segments.length} segments`);
         fetchSegment(0, myPlaybackId);
@@ -313,7 +332,7 @@ export function useAudio() {
             currentIndexRef.current++;
             const nextAudio = audioCacheRef.current.get(currentIndexRef.current);
             if (!nextAudio) {
-                setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
+                setPlayback({ isLoading: true, currentTime: 0, duration: 0, currentSegmentIndex: currentIndexRef.current });
             }
 
             playSegment(currentIndexRef.current, newId);
@@ -340,7 +359,7 @@ export function useAudio() {
             currentIndexRef.current--;
             const prevAudio = audioCacheRef.current.get(currentIndexRef.current);
             if (!prevAudio) {
-                setPlayback({ isLoading: true, currentTime: 0, duration: 0 });
+                setPlayback({ isLoading: true, currentTime: 0, duration: 0, currentSegmentIndex: currentIndexRef.current });
             }
 
             playSegment(currentIndexRef.current, newId);

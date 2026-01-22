@@ -1,4 +1,5 @@
 @echo off
 echo Installing Kokoro TTS Native Host...
-python native-host/install.py
+cd /d %~dp0
+python ../native-host/install.py
 pause

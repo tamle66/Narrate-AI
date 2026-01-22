@@ -40,42 +40,115 @@ function cleanAndFormatText(root: HTMLElement): string {
         .join('\n');
 }
 
+function preCleanDOM(doc: Document) {
+    // List of selectors that usually contain noise or navigation
+    const noiseSelectors = [
+        '.rc-ModuleNav', '.rc-SyllabusNav', '.rc-NavigationLink', // Coursera
+        '.sidebar', '.navigation', '.menu', 'nav', 'header', 'footer',
+        '.ad', '.ads', '.social-share', '.related-posts', '.comments',
+        '#header', '#footer'
+    ];
+
+    noiseSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+            try { el.remove(); } catch (e) { }
+        });
+    });
+
+    // Remove interactive elements
+    doc.querySelectorAll('button, input, select, textarea, noscript, style, iframe').forEach(el => {
+        try { el.remove(); } catch (e) { }
+    });
+}
+
 function getPageContent() {
     log("Starting page content extraction");
 
-    // 1. Use Readability for high-quality extraction
+    // 1. Try Readability on the FULL document first (it's better at its job with context)
     try {
         const documentClone = document.cloneNode(true) as Document;
         const reader = new Readability(documentClone);
         const article = reader.parse();
 
-        if (article && article.content) {
+        if (article && article.textContent && article.textContent.trim().length > 100) {
+            log(`Readability success: ${article.title || "Untitled"}`);
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = article.content;
+            tempDiv.innerHTML = article.content || "";
+
+            // Clean up the extracted content (but not too much)
+            tempDiv.querySelectorAll('button, input, script, style').forEach(el => el.remove());
 
             const cleanText = cleanAndFormatText(tempDiv);
-
             if (cleanText.length > 50) {
                 return {
                     type: 'page',
-                    text: cleanText.substring(0, 15000),
-                    title: article.title
+                    text: cleanText,
+                    title: article.title || document.title || "Untitled"
                 };
             }
+        } else {
+            log("Readability found insufficient content, trying fallback...");
         }
     } catch (err) {
         log(`Readability error: ${err}`);
     }
 
-    // 2. Fallback to basic extraction
-    const mainContent = document.querySelector('article') || document.querySelector('main') || document.body;
+    // 2. Fallback: Targeted Search
+    const contentSelectors = [
+        'article',
+        '[role="main"]',
+        'main',
+        '.content-detail', // common for news
+        '.post-content',
+        '.entry-content',
+        '.article-content',
+        '#main-content',
+        '.main-content',
+        '.fck_detail', // common in Vietnamese sites
+        '.detail-content'
+    ];
+
+    let mainContent: HTMLElement | null = null;
+    for (const selector of contentSelectors) {
+        const el = document.querySelector(selector) as HTMLElement;
+        if (el && el.innerText.trim().length > 200) {
+            log(`Found content using selector: ${selector}`);
+            mainContent = el;
+            break;
+        }
+    }
+
+    if (!mainContent) {
+        log("No targeted content container found, using body");
+        mainContent = document.body;
+    }
+
     const clone = mainContent.cloneNode(true) as HTMLElement;
-    const cleanText = cleanAndFormatText(clone);
+
+    // Use preCleanDOM to remove generic noise from the clone's owner context if possible, 
+    // or just clean the clone itself.
+    // To apply preCleanDOM's logic to an HTMLElement clone, we need to create a temporary Document
+    // or adapt preCleanDOM to work on an HTMLElement. For simplicity and to use the existing function,
+    // we'll create a temporary document for the clone.
+    const tempDoc = document.implementation.createHTMLDocument('temp');
+    tempDoc.body.appendChild(clone); // Append the clone to the temporary document's body
+    preCleanDOM(tempDoc); // Apply preCleanDOM to the temporary document
+
+    // After preCleanDOM, the content is now in tempDoc.body. We need to get it back.
+    const cleanedClone = tempDoc.body;
+
+    // Final specific cleanup on the clone
+    cleanedClone.querySelectorAll('nav, header, footer, aside, .sidebar, button, script, style, .rc-NavigationLink, .rc-ModuleNav').forEach(el => {
+        try { el.remove(); } catch (e) { }
+    });
+
+    const cleanText = cleanAndFormatText(cleanedClone);
+    log(`Final extracted length: ${cleanText.length}`);
 
     return {
         type: 'fallback',
-        text: cleanText.substring(0, 5000),
-        title: document.title
+        text: cleanText,
+        title: document.title || "Untitled"
     };
 }
 

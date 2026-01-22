@@ -1,3 +1,61 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+
+    /* Global Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #0d0d0d;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #3d1b00;
+        /* Deep orange tint */
+        border-radius: 10px;
+        border: 2px solid #0d0d0d;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #ff6b00;
+    }
+}
+
+/* Custom Slim Scrollbar for Logs & Sidepanel */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #ff6b00;
+    /* Primary orange always visible */
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ff9500;
+    /* Brighter glow on hover */
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.6);
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #3d1b00 #0d0d0d;
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #ff6b00 transparent;
+}

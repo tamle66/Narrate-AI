@@ -7,6 +7,7 @@ import os
 import time
 import logging
 import threading
+import re
 
 # Setup logging
 log_file = os.path.join(os.path.dirname(__file__), "host_debug.log")
@@ -18,17 +19,21 @@ def log(msg):
 
 # Configuration
 PORT = 8880
-BACKEND_DIR_NAME = "backend"
-# Determine absolute path for backend relative to this script
-BACKEND_ABS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", BACKEND_DIR_NAME))
+BACKEND_DIR_NAME = "kokoro-engine"
+# Determine absolute path for backend relative to this script: ../external/kokoro-engine
+BACKEND_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "external"))
+BACKEND_ABS_PATH = os.path.join(BACKEND_ROOT_DIR, BACKEND_DIR_NAME)
 
 POSSIBLE_PATHS = [
     BACKEND_ABS_PATH,
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Kokoro-FastAPI")),
+    # Fallback for old project structure if still exists
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")), 
 ]
 
 # Lock for stdout access
 stdout_lock = threading.Lock()
+current_process = None
+process_lock = threading.Lock()
 
 def send_message(message):
     """Send a message to Chrome via stdout. Thread-safe."""
@@ -78,47 +83,111 @@ def monitor_process_output(process, message_type="starting"):
     """Reads stdout from the process and sends it to Chrome."""
     log(f"Started monitoring process output (Type: {message_type})")
     try:
-        # Read byte by byte or small chunks to avoid buffering issues
-        # This is a bit more manual but ensures we catch everything immediately
-        for line in iter(process.stdout.readline, b''):
-            log(f"Raw line read: {line}") # Debug raw bytes
-            try:
-                # Try decoding commonly used encodings in Windows
-                decoded = line.decode('utf-8').strip()
-            except:
-                try:
-                    decoded = line.decode('mbcs', errors='ignore').strip()
-                except:
-                    decoded = str(line)
+        # Use a small buffer to catch progress updates like \r
+        buffer = b""
+        while True:
+            char = process.stdout.read(1)
+            if not char:
+                break
             
-            if decoded:
-                log(f"{message_type.upper()} log: {decoded}")
-                send_message({"status": message_type, "log": decoded})
+            if char == b'\n' or char == b'\r':
+                if buffer:
+                    try:
+                        decoded = buffer.decode('utf-8', errors='ignore').strip()
+                    except:
+                        decoded = str(buffer)
+                    
+                    if decoded:
+                        # log(f"{message_type.upper()} log: {decoded}")
+                        send_message({"status": message_type, "log": decoded})
+                    buffer = b""
             else:
-                # Still send empty lines to keep connection alive? No, might spam.
-                pass
+                buffer += char
                 
     except Exception as e:
         log(f"Monitor exception: {e}")
     finally:
         log("Stopped monitoring process output")
-        # If process ends, check return code
-        if process.poll() is not None and process.returncode != 0:
+        # Check if process is still alive, if so, wait a bit
+        try:
+            process.wait(timeout=1)
+        except:
+            pass
+        if process.returncode != 0:
              send_message({"status": "error", "message": f"Process exited with code {process.returncode}"})
+    
+    # Clear global process if it's this one
+    global current_process
+    with process_lock:
+        if current_process == process:
+            current_process = None
+
+def kill_current_process():
+    global current_process
+    with process_lock:
+        if current_process:
+            log(f"Killing process {current_process.pid}")
+            try:
+                # Kill process tree on Windows
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(current_process.pid)], 
+                               capture_output=True, check=False)
+            except Exception as e:
+                log(f"Kill error: {e}")
+            current_process = None
 
 def install_backend():
     """Clones repo and installs uv if missing."""
     target_dir = BACKEND_ABS_PATH
+    root_dir = BACKEND_ROOT_DIR
     log(f"Starting backend installation to: {target_dir}")
     
-    # Set environment to force unbuffered output
+    if not os.path.exists(target_dir):
+        try:
+            log(f"Cloning repo to {target_dir}...")
+            send_message({"status": "installing", "log": f"[SETUP] Cloning Kokoro-FastAPI..."})
+            subprocess.run(['git', 'clone', 'https://github.com/remsky/Kokoro-FastAPI.git', target_dir], check=True)
+            log("Clone successful.")
+        except Exception as e:
+            log(f"Clone failed: {e}")
+            return {"status": "error", "message": f"Git clone failed: {e}"}
+
+    # Ensure external directory exists
+    if not os.path.exists(root_dir):
+        os.makedirs(root_dir)
+    
+    # Set environment to force unbuffered output and plain progress
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
+    env["UV_PROGRESS_MODE"] = "plain"
+    env["UV_SHOW_PROGRESS"] = "1"
     
-    if os.path.exists(target_dir):
-        # Even if exists, we might want to run setup to ensure dependencies
-        log("Backend folder exists. proceeding to setup deps.")
+    # 1. Patch pyproject.toml directly in Python to avoid shell escaping hell
+    pyproject_path = os.path.join(target_dir, "pyproject.toml")
+    lock_path = os.path.join(target_dir, "uv.lock")
     
+    if os.path.exists(pyproject_path):
+        try:
+            log(f"Patching {pyproject_path}...")
+            with open(pyproject_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Replace misaki[en,ja,ko,zh] or any variant with just misaki[en]
+            new_content = re.sub(r'misaki\[.*?\]', 'misaki[en]', content)
+            
+            if content != new_content:
+                with open(pyproject_path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                log("Patching successful.")
+                # Also must delete lock file to force re-resolve
+                if os.path.exists(lock_path):
+                    os.remove(lock_path)
+                    log("Deleted uv.lock to force re-resolution.")
+            else:
+                log("No patching needed (already patched).")
+        except Exception as e:
+            log(f"Patching failed: {e}")
+
+    # 2. Prepare the setup script for remaining tasks
     try:
         setup_script_path = os.path.join(os.path.dirname(__file__), "temp_setup.bat")
         with open(setup_script_path, "w") as f:
@@ -126,18 +195,26 @@ def install_backend():
             f.write(f'echo [SETUP] STARTING SETUP PROCESS...\n')
             
             if not os.path.exists(target_dir):
-                f.write(f'echo [SETUP] Cloning Kokoro-FastAPI...\n')
-                f.write(f'git clone https://github.com/remsky/Kokoro-FastAPI.git "{target_dir}"\n')
+                f.write(f'echo [SETUP] External folder missing. This shouldn\'t happen here.\n')
             
             f.write(f'cd /d "{target_dir}"\n')
-            f.write(f'echo [SETUP] Installing uv...\n')
-            f.write(f'pip install uv\n')
+            f.write(f'echo [SETUP] Updating pip and installing uv...\n')
+            f.write(f'"{sys.executable}" -m pip install --upgrade pip\n')
+            f.write(f'"{sys.executable}" -m pip install uv\n')
+            f.write(f'echo [SETUP] Success: UV is ready.\n')
+            f.write(f'echo [SETUP] Initializing AI environment (this may take a few minutes)...\n')
+            f.write(f'uv sync --no-dev\n')
             f.write(f'echo [SETUP] Installation Complete.\n')
 
         log(f"Running setup script: {setup_script_path}")
+        kill_current_process() # Cleanup any old one
+        
         # Run with env
         process = subprocess.Popen([setup_script_path], cwd=os.path.dirname(__file__), 
                                    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+        
+        with process_lock:
+            current_process = process
         
         t = threading.Thread(target=monitor_process_output, args=(process, "installing"), daemon=True)
         t.start()
@@ -157,33 +234,47 @@ def start_server():
         log("Server already running on port 8880")
         return {"status": "running", "message": "Server already active"}
 
-    # Set environment to force unbuffered output
+    # Set environment for server start
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
+    env["UV_PROGRESS_MODE"] = "plain"
+    env["UV_SHOW_PROGRESS"] = "1"
 
     try:
-        start_script_bat = os.path.join(server_path, "start-cpu.bat")
-        start_script_ps1 = os.path.join(server_path, "start-cpu.ps1")
+        # Priority: GPU PS1 > CPU PS1 > GPU BAT > CPU BAT
+        scripts = [
+            ("start-gpu.ps1", "ps1"),
+            ("start-cpu.ps1", "ps1"),
+            ("start-gpu.bat", "bat"),
+            ("start-cpu.bat", "bat")
+        ]
         
         process = None
-
-        if os.path.exists(start_script_bat):
-             log(f"Starting via BAT: {start_script_bat}")
-             process = subprocess.Popen([start_script_bat], cwd=server_path, 
-                                        shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
-        
-        elif os.path.exists(start_script_ps1):
-             log(f"Starting via PS1: {start_script_ps1}")
-             process = subprocess.Popen(["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", start_script_ps1], 
-                                        cwd=server_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+        for script_name, script_type in scripts:
+            script_path = os.path.join(server_path, script_name)
+            if os.path.exists(script_path):
+                log(f"Attempting to start via {script_type.upper()}: {script_path}")
+                if script_type == "ps1":
+                    process = subprocess.Popen(["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", script_path], 
+                                                cwd=server_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+                else: # bat
+                    process = subprocess.Popen([script_path], cwd=server_path, 
+                                                shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+                
+                if process:
+                    log(f"Successfully launched: {script_name}")
+                    kill_current_process()
+                    with process_lock:
+                        current_process = process
+                    break
              
         if process:
             t = threading.Thread(target=monitor_process_output, args=(process, "starting"), daemon=True)
             t.start()
-            return {"status": "starting", "message": "Launched start script with monitoring"}
+            return {"status": "starting", "message": "Launched server script with monitoring"}
 
         log("No start script found.")
-        return {"status": "error", "message": "No start script found in backend folder"}
+        return {"status": "error", "message": "No recognized start script (ps1/bat) found in backend folder"}
         
     except Exception as e:
         log(f"Start server exception: {e}")
@@ -213,6 +304,10 @@ def main():
             elif cmd == "install_backend":
                 result = install_backend()
                 send_message(result)
+            
+            elif cmd == "stop":
+                kill_current_process()
+                send_message({"status": "stopped", "message": "Process killed by user"})
 
             elif cmd == "ping":
                 send_message({"response": "pong"})
@@ -221,6 +316,7 @@ def main():
             
         except Exception as e:
             log(f"Main Loop Exception: {e}")
+            kill_current_process()
             send_message({"status": "error", "message": str(e)}) 
             break
 
